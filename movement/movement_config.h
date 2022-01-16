@@ -41,6 +41,7 @@
 #include "lis2dh_logging_face.h"
 #include "demo_face.h"
 #include "hello_there_face.h"
+#include "sunrise_sunset_face.h"
 
 const watch_face_t watch_faces[] = {
     simple_clock_face,
