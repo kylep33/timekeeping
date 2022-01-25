@@ -25,25 +25,7 @@
 #ifndef MOVEMENT_CONFIG_H_
 #define MOVEMENT_CONFIG_H_
 
-#include "simple_clock_face.h"
-#include "world_clock_face.h"
-#include "preferences_face.h"
-#include "set_time_face.h"
-#include "pulsometer_face.h"
-#include "thermistor_readout_face.h"
-#include "thermistor_logging_face.h"
-#include "character_set_face.h"
-#include "beats_face.h"
-#include "day_one_face.h"
-#include "voltage_face.h"
-#include "stopwatch_face.h"
-#include "totp_face.h"
-#include "lis2dh_logging_face.h"
-#include "demo_face.h"
-#include "hello_there_face.h"
-#include "sunrise_sunset_face.h"
-#include "countdown_face.h"
-#include "blinky_face.h"
+#include "movement_faces.h"
 
 const watch_face_t watch_faces[] = {
     simple_clock_face,
