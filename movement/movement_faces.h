@@ -46,6 +46,7 @@
 #include "countdown_face.h"
 #include "blinky_face.h"
 #include "moon_phase_face.h"
+#include "mars_time_face.h"
 #include "orrery_face.h"
 #include "astronomy_face.h"
 #include "tomato_face.h"
