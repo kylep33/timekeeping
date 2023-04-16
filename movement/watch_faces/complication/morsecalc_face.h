@@ -24,11 +24,13 @@
 
 #ifndef MORSECALC_FACE_H_
 #define MORSECALC_FACE_H_
-#define MORSECALC_TOKEN_LEN 9
+
+#define MORSECALC_TOKEN_LEN 32
+#define MORSECODE_LEN 5
 
 #include "movement.h"
 #include "calc.h"
-#include "mc.h"
+#include "morsecode.c"
 
 void morsecalc_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
 void morsecalc_face_activate(movement_settings_t *settings, void *context);
@@ -37,17 +39,14 @@ void morsecalc_face_resign(movement_settings_t *settings, void *context);
 
 typedef struct {
 	calc_state_t *cs;
-	mc_state_t *mc; 
+	unsigned int mc; // Morse code character
 	char token[MORSECALC_TOKEN_LEN];
 	uint8_t idxt;
 	uint8_t led_is_on;
 } morsecalc_state_t;
 
-void morsecalc_print_float(double d);
-void morsecalc_print_token(morsecalc_state_t *mcs);
-void morsecalc_print_stack(morsecalc_state_t *mcs);
 void morsecalc_reset_token(morsecalc_state_t *mcs);
-void morsecalc_input(morsecalc_state_t *mcs, char c);
+void morsecalc_input(morsecalc_state_t *mcs);
 
 #define morsecalc_face ((const watch_face_t){ \
     morsecalc_face_setup, \
