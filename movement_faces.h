@@ -32,6 +32,7 @@
 #include "fast_stopwatch_face.h"
 #include "sunrise_sunset_face.h"
 #include "character_set_face.h"
+#include "all_segments_face.h"
 #include "float_demo_face.h"
 #include "voltage_face.h"
 #include "set_time_face.h"
