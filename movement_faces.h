@@ -40,4 +40,5 @@
 #include "voltage_face.h"
 #include "set_time_face.h"
 #include "preferences_face.h"
+#include "light_sensor_face.h"
 // New includes go above this line.
