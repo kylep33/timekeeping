@@ -37,8 +37,10 @@
 #include "float_demo_face.h"
 #include "temperature_display_face.h"
 #include "temperature_logging_face.h"
+#include "activity_logging_face.h"
 #include "voltage_face.h"
 #include "set_time_face.h"
 #include "preferences_face.h"
 #include "light_sensor_face.h"
+#include "accelerometer_sleep_state_face.h"
 // New includes go above this line.
