@@ -28,7 +28,7 @@
 #include "tc.h"
 #include "eic.h"
 #include "usb.h"
-#include "uart.h"
+#include "adc.h"
 
 #ifdef HAS_IR_SENSOR
 
@@ -44,13 +44,11 @@ void light_sensor_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 void light_sensor_face_activate(void *context) {
     light_sensor_state_t *state = (light_sensor_state_t *)context;
     (void) state;
-    HAL_GPIO_IR_ENABLE_out();
-    HAL_GPIO_IR_ENABLE_clr();
     HAL_GPIO_IRSENSE_in();
-    HAL_GPIO_IRSENSE_pmuxen(HAL_GPIO_PMUX_SERCOM_ALT);
-    uart_init_instance(0, UART_TXPO_NONE, UART_RXPO_0, 300);
-    uart_set_irda_mode_instance(0, true);
-    uart_enable_instance(0);
+    HAL_GPIO_IRSENSE_pmuxen(HAL_GPIO_PMUX_ADC);
+    adc_init();
+    adc_enable();
+    movement_request_tick_frequency(8);
 }
 
 bool light_sensor_face_loop(movement_event_t event, void *context) {
@@ -60,53 +58,25 @@ bool light_sensor_face_loop(movement_event_t event, void *context) {
     switch (event.event_type) {
         case EVENT_NONE:
         case EVENT_ACTIVATE:
-            watch_display_text_with_fallback(WATCH_POSITION_TOP, "IrDA", "IR");
-            // fall through
         case EVENT_TICK:
         {
-            uint8_t data[32];
-            size_t bytes_read = uart_read_instance(0, data, 32);
-            if (bytes_read) {
-                char buf[7];
-                snprintf(buf, 7, "%3db r", bytes_read);
-                watch_display_text(WATCH_POSITION_BOTTOM, buf);
-                data[31] = 0;
-                printf("%s: ", buf);
-                // dump as hex
-                for(size_t i = 0; i < bytes_read; i++) {
-                    printf("%02X ", data[i]);
-                }
-                printf("\n");
-            } else {
-                watch_display_text(WATCH_POSITION_BOTTOM, "no dat");
-            }
+            char buf[14];
+            uint16_t light_level = adc_get_analog_value(HAL_GPIO_IRSENSE_pin());
+            snprintf(buf, 14, "LL  %-6d", light_level);
+            watch_display_text(WATCH_POSITION_FULL, buf);
+            printf("%s\n", buf);
         }
             break;
         case EVENT_LIGHT_BUTTON_UP:
-            // You can use the Light button for your own purposes. Note that by default, Movement will also
-            // illuminate the LED in response to EVENT_LIGHT_BUTTON_DOWN; to suppress that behavior, add an
-            // empty case for EVENT_LIGHT_BUTTON_DOWN.
             break;
         case EVENT_ALARM_BUTTON_UP:
-            // Just in case you have need for another button.
             break;
         case EVENT_TIMEOUT:
-            // Your watch face will receive this event after a period of inactivity. If it makes sense to resign,
-            // you may uncomment this line to move back to the first watch face in the list:
-            // movement_move_to_face(0);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            // If you did not resign in EVENT_TIMEOUT, you can use this event to update the display once a minute.
-            // Avoid displaying fast-updating values like seconds, since the display won't update again for 60 seconds.
-            // You should also consider starting the tick animation, to show the wearer that this is sleep mode:
-            // watch_start_sleep_animation(500);
+            watch_display_text(WATCH_POSITION_TOP_RIGHT, " <");
             break;
         default:
-            // Movement's default loop handler will step in for any cases you don't handle above:
-            // * EVENT_LIGHT_BUTTON_DOWN lights the LED
-            // * EVENT_MODE_BUTTON_UP moves to the next watch face in the list
-            // * EVENT_MODE_LONG_PRESS returns to the first watch face (or skips to the secondary watch face, if configured)
-            // You can override any of these behaviors by adding a case for these events to this switch statement.
             return movement_default_loop_handler(event);
     }
 
@@ -116,11 +86,9 @@ bool light_sensor_face_loop(movement_event_t event, void *context) {
 void light_sensor_face_resign(void *context) {
     (void) context;
 
-    // handle any cleanup before your watch face goes off-screen.
+    adc_disable();
+    HAL_GPIO_IRSENSE_pmuxdis();
+    HAL_GPIO_IRSENSE_off();
 }
 
-void irq_handler_sercom0(void);
-void irq_handler_sercom0(void) {
-    uart_irq_handler(0);
-}
 #endif // HAS_IR_SENSOR
