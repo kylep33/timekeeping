@@ -25,7 +25,10 @@
 #pragma once
 
 /*
- * PREFERENCES face
+ * Legacy PREFERENCES face
+ *
+ * This face is deprecated and will be removed in a future release.
+ * Please use the Settings watch face instead.
  *
  * The Preferences watch face allows you to configure various options on your
  * Sensor Watch. Like all other screens, you advance the field you’re setting
