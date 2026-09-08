@@ -504,7 +504,7 @@ bool movement_default_loop_handler(movement_event_t event) {
             if (movement_on_resting_face()) {
                 movement_move_to_face(FACE_MODE_SELECT);
             } else {
-                movement_move_to_face(_current_mode()->face_indexes[0]);
+                movement_move_to_resting_face();
             }
             break;
         default:
@@ -542,6 +542,10 @@ uint8_t movement_num_modes(void) {
 const char *movement_mode_name(uint8_t mode_index) {
     if (mode_index >= MOVEMENT_NUM_MODES) return "";
     return movement_modes[mode_index].name;
+}
+
+void movement_move_to_resting_face(void) {
+    movement_move_to_face(_current_mode()->face_indexes[0]);
 }
 
 bool movement_on_resting_face(void) {

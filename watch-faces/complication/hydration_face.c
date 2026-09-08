@@ -509,7 +509,7 @@ static bool _tracking_loop(movement_event_t event, void *context)
             _check_hydration_alert(state);
             break;
         case EVENT_TIMEOUT:
-            movement_move_to_face(0);
+            movement_move_to_resting_face();
             break;
         default:
             movement_default_loop_handler(event);
@@ -548,7 +548,7 @@ static bool _log_loop(movement_event_t event, void *context)
             _check_hydration_alert(state);
             break;
         case EVENT_TIMEOUT:
-            movement_move_to_face(0);
+            movement_move_to_resting_face();
             break;
         default:
             movement_default_loop_handler(event);
@@ -612,7 +612,7 @@ static bool _settings_loop(movement_event_t event, void *context)
             _check_hydration_alert(state);
             break;
         case EVENT_TIMEOUT:
-            movement_move_to_face(0);
+            movement_move_to_resting_face();
             break;
         default:
             movement_default_loop_handler(event);

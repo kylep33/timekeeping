@@ -359,7 +359,7 @@ bool countdown_face_loop(movement_event_t event, void *context) {
                 movement_request_tick_frequency(1);
             }
             if (state->mode != cd_running) {
-                movement_move_to_face(0);
+                movement_move_to_resting_face();
             }
             break;
         case EVENT_LOW_ENERGY_UPDATE:

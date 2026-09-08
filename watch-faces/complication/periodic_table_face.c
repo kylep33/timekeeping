@@ -473,7 +473,7 @@ static void _handle_mode_still_pressed(periodic_table_state_t *state, bool shoul
             switch (state->mode)
             {
             case SCREEN_TITLE:
-                movement_move_to_face(0);
+                movement_move_to_resting_face();
                 return;
             case SCREEN_ELEMENT:
                 state->mode = SCREEN_TITLE;
