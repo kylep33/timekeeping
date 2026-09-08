@@ -45,6 +45,7 @@ typedef enum {
     FACE_SUNRISE_SUNSET,
     FACE_MOON_PHASE,
     FACE_TIDE,
+    FACE_CLIMB_TIMER,
     FACE_SET_TIME,
     FACE_ADVANCED_ALARM,
     FACE_FINETUNE,
@@ -69,6 +70,7 @@ const watch_face_t watch_faces[] = {
     [FACE_SUNRISE_SUNSET] = sunrise_sunset_face,
     [FACE_MOON_PHASE] = moon_phase_face,
     [FACE_TIDE] = tide_face,
+    [FACE_CLIMB_TIMER] = climb_timer_face,
     [FACE_SET_TIME] = set_time_face,
     [FACE_ADVANCED_ALARM] = advanced_alarm_face,
     [FACE_FINETUNE] = finetune_face,
@@ -84,7 +86,7 @@ const watch_face_t watch_faces[] = {
  * be something worth staring at rather than a screen a stray press would disturb.
  */
 static const uint8_t daily_faces[] = { FACE_ISH, FACE_TIMER, FACE_STOPWATCH, FACE_COIN_FLIP };
-static const uint8_t climb_faces[] = { FACE_CLOCK };
+static const uint8_t climb_faces[] = { FACE_CLOCK, FACE_CLIMB_TIMER };
 static const uint8_t game_faces[] = { FACE_CLOCK, FACE_PROBABILITY, FACE_PULSOMETER, FACE_ENDLESS_RUNNER, FACE_PING, FACE_TAROT, FACE_SIMON };
 static const uint8_t outdoor_faces[] = { FACE_CLOCK, FACE_SUNRISE_SUNSET, FACE_MOON_PHASE, FACE_TIDE };
 static const uint8_t setup_faces[] = { FACE_CLOCK, FACE_SET_TIME, FACE_ADVANCED_ALARM, FACE_FINETUNE, FACE_NANOSEC, FACE_SETTINGS, FACE_VOLTAGE };

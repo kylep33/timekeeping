@@ -85,5 +85,6 @@
 #include "tide_face.h"
 #include "world_clock2_face.h"
 #include "hydration_face.h"
+#include "climb_timer_face.h"
 #include "mode_select_face.h"
 // New includes go above this line.
