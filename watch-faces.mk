@@ -29,6 +29,7 @@ SRCS += \
   ./watch-faces/sensor/activity_logging_face.c \
   ./watch-faces/sensor/voltage_face.c \
   ./watch-faces/settings/set_time_face.c \
+  ./watch-faces/complication/climb_timer_face.c \
   ./watch-faces/settings/mode_select_face.c \
   ./watch-faces/settings/settings_face.c \
   ./watch-faces/settings/finetune_face.c \
