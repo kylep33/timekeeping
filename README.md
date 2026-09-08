@@ -3,7 +3,8 @@
 this is my repo for my custom sensorboard watch.
 
 Hardware: **Sensor Watch Pro** board + **custom LCD** (Oddly Specific Objects) +
-LIS2DW accelerometer, in a Casio F-91W case.
+LIS2DW accelerometer, in a **Casio F-84W** case (module 593, same as the F-91W
+Sensor Watch targets).
 
 This repo is a fork of [Second Movement](https://github.com/joeycastillo/Second-Movement),
 the community firmware for Sensor Watch. Upstream's own README follows below.
@@ -40,6 +41,28 @@ git merge upstream/main
 - `movement_faces.h` — `#include` for each face
 - `watch-faces.mk` — build list
 - `watch-faces/` — face source; mine live alongside upstream's
+
+## Modes
+
+Long-press MODE on a mode's first face to open the mode picker; short-press MODE
+cycles the name, long-press MODE commits (also commits on its own after a few
+seconds). Each mode has its own face rotation and hourly chime tune.
+
+| mode | faces (MODE cycles in this order) | chime |
+|---|---|---|
+| DAILY | ish, timer, stopwatch, coin flip | Kim Possible |
+| CLIMB | clock, climb timer | Zelda secret |
+| GAME | clock, probability, pulsometer, endless runner, ping, tarot, simon | Mario theme |
+| OUTDR | clock, sunrise/sunset, moon phase, tide | Evangelion |
+| SETUP | clock, set time, advanced alarm, finetune, nanosec, settings, voltage | MGS codec |
+
+Face notes:
+- **ish** — fuzzy time; hold ALARM to peek exact time (forced 24h), tap ALARM to
+  change how fuzzy.
+- **climb timer** — hold ALARM to start the approach (segment 0), tap ALARM to
+  bank a pitch and start the next, hold ALARM to stop and see the summary, tap
+  to step through it, hold to clear. Up to 25 segments.
+- **sunrise/sunset** — also holds the location presets (San Diego, Yosemite).
 
 ---
 
