@@ -305,6 +305,8 @@ bool timer_face_loop(movement_event_t event, void *context) {
             watch_buzzer_play_sequence((int8_t *)_sound_seq_beep, _signal_callback);
             _reset(state);
             if (state->timers[state->current_timer].unit.repeat) _start(state, false);
+            // the timer runs while other faces are on screen, so show the wearer what just fired
+            movement_move_to_face(state->watch_face_index);
             break;
         case EVENT_ALARM_LONG_PRESS:
             switch(state->mode) {
@@ -342,7 +344,7 @@ bool timer_face_loop(movement_event_t event, void *context) {
         case EVENT_MODE_LONG_PRESS:
         case EVENT_TIMEOUT:
             _abort_quick_cycle(state);
-            movement_move_to_face(0);
+            movement_move_to_resting_face();
             break;
         default:
             movement_default_loop_handler(event);

@@ -275,7 +275,7 @@ bool wareki_loop(movement_event_t event, void *context) {
 
         case EVENT_TIMEOUT:
             //printf("time out ! \n");
-            movement_move_to_face(0);
+            movement_move_to_resting_face();
 
             break;
         //case EVENT_LOW_ENERGY_UPDATE:

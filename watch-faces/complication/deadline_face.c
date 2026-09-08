@@ -344,7 +344,7 @@ static bool _deadline_running_loop(movement_event_t event, void *context)
             _deadline_running_display(event, state);
             break;
         case EVENT_TIMEOUT:
-            movement_move_to_face(0);
+            movement_move_to_resting_face();
             break;
         case EVENT_BACKGROUND_TASK:
             _background_alarm_play(state);
@@ -472,7 +472,7 @@ static bool _deadline_settings_loop(movement_event_t event, void *context)
             _beep(BEEP_BUTTON);
             _change_tick_freq(1, state);
             state->mode = DEADLINE_RUNNING;
-            movement_move_to_face(0);
+            movement_move_to_resting_face();
             break;
         case EVENT_MODE_BUTTON_UP:
             _beep(BEEP_DISABLE);

@@ -414,7 +414,7 @@ bool settings_face_loop(movement_event_t event, void *context) {
             state->settings_screens[state->current_page].advance();
             break;
         case EVENT_TIMEOUT:
-            movement_move_to_face(0);
+            movement_move_to_resting_face();
             break;
         default:
             return movement_default_loop_handler(event);

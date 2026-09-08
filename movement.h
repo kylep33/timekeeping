@@ -340,6 +340,9 @@ const char *movement_mode_name(uint8_t mode_index);
 /// @brief Switch to a mode, land on its first face and play its chime.
 void movement_set_mode(uint8_t mode_index);
 
+/// @brief Return to the resting face of the current mode.
+void movement_move_to_resting_face(void);
+
 /// @brief True when the active face is the resting face of the current mode.
 /// @details The resting face is where every timeout lands, so it never receives EVENT_TIMEOUT itself.
 bool movement_on_resting_face(void);

@@ -286,7 +286,7 @@ bool simon_face_loop(movement_event_t event,
             break;
         case EVENT_MODE_LONG_PRESS:
             if (state->playing_state == SIMON_NOT_PLAYING) {
-                movement_move_to_face(0);
+                movement_move_to_resting_face();
             } else {
                 state->playing_state = SIMON_NOT_PLAYING;
                 _simon_reset(state);
@@ -310,7 +310,7 @@ bool simon_face_loop(movement_event_t event,
             }
             break;
         case EVENT_TIMEOUT:
-            movement_move_to_face(0);
+            movement_move_to_resting_face();
             break;
         case EVENT_LOW_ENERGY_UPDATE:
             break;

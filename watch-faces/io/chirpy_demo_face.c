@@ -259,7 +259,7 @@ bool chirpy_demo_face_loop(movement_event_t event, void *context) {
         case EVENT_TIMEOUT:
             // Do not time out while we're chirping
             if (state->mode != CDM_CHIRPING) {
-                movement_move_to_face(0);
+                movement_move_to_resting_face();
             }
             // fall through
         default:

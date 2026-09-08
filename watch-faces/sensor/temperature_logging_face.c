@@ -103,7 +103,7 @@ bool temperature_logging_face_loop(movement_event_t event, void *context) {
     temperature_logging_state_t *logger_state = (temperature_logging_state_t *)context;
     switch (event.event_type) {
         case EVENT_TIMEOUT:
-            movement_move_to_face(0);
+            movement_move_to_resting_face();
             break;
         case EVENT_LIGHT_LONG_PRESS:
             // light button shows the timestamp, but if you need the light, long press it.
