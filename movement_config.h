@@ -51,8 +51,8 @@ const watch_face_t watch_faces[] = {
  */
 #define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 5)
 
-/* Custom hourly chime tune. Check movement_custom_signal_tunes.h for options. */
-#define SIGNAL_TUNE_DEFAULT
+/* Hourly chime tune used until a mode selects its own. See movement_custom_signal_tunes.h for options. */
+#define MOVEMENT_DEFAULT_SIGNAL_TUNE SIGNAL_TUNE_KIM_POSSIBLE
 
 /* Determines the intensity of the led colors
  * Set a hex value 0-15 with 0x0 being off and 0xF being max intensity

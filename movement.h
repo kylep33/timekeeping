@@ -31,6 +31,21 @@
 #include "utz.h"
 #include "lis2dw.h"
 
+typedef enum {
+    SIGNAL_TUNE_DEFAULT,
+    SIGNAL_TUNE_ZELDA_SECRET,
+    SIGNAL_TUNE_MARIO_THEME,
+    SIGNAL_TUNE_MGS_CODEC,
+    SIGNAL_TUNE_KIM_POSSIBLE,
+    SIGNAL_TUNE_POWER_RANGERS,
+    SIGNAL_TUNE_LAYLA,
+    SIGNAL_TUNE_HARRY_POTTER_SHORT,
+    SIGNAL_TUNE_HARRY_POTTER_LONG,
+    SIGNAL_TUNE_JURASSIC_PARK,
+    SIGNAL_TUNE_EVANGELION,
+    SIGNAL_TUNE_COUNT,
+} signal_tune_index_t;
+
 /// @brief A struct that allows a watch face to report its state back to Movement.
 typedef struct {
     uint8_t wants_background_task: 1;
@@ -333,6 +348,7 @@ void movement_request_wake(void);
 
 void movement_play_note(watch_buzzer_note_t note, uint16_t duration_ms);
 void movement_play_signal(void);
+void movement_set_signal_tune(signal_tune_index_t tune);
 void movement_play_alarm(void);
 void movement_play_alarm_beeps(uint8_t rounds, watch_buzzer_note_t alarm_note);
 void movement_play_sequence(int8_t *note_sequence, movement_buzzer_priority_t priority);

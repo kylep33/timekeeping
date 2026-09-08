@@ -111,6 +111,9 @@ movement_volatile_state_t movement_volatile_state;
 // The last sequence that we have been asked to play while the watch was in deep sleep
 static int8_t *_pending_sequence;
 
+// The hourly chime tune, replaced whenever the wearer switches to a mode with its own tune
+static signal_tune_index_t _signal_tune = MOVEMENT_DEFAULT_SIGNAL_TUNE;
+
 // The note sequence of the default alarm
 int8_t alarm_tune[] = {
     BUZZER_NOTE_C8, 3,
@@ -584,8 +587,16 @@ void movement_play_note(watch_buzzer_note_t note, uint16_t duration_ms) {
     movement_play_sequence(single_note_sequence, BUZZER_PRIORITY_BUTTON);
 }
 
+void movement_set_signal_tune(signal_tune_index_t tune) {
+    if (tune >= SIGNAL_TUNE_COUNT) {
+        printf("Signal tune %d out of range, keeping the current one. Use a signal_tune_index_t value.\r\n", tune);
+        return;
+    }
+    _signal_tune = tune;
+}
+
 void movement_play_signal(void) {
-    movement_play_sequence(signal_tune, BUZZER_PRIORITY_SIGNAL);
+    movement_play_sequence(signal_tunes[_signal_tune], BUZZER_PRIORITY_SIGNAL);
 }
 
 void movement_play_alarm(void) {
