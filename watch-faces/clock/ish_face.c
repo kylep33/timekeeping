@@ -46,9 +46,27 @@ static bool ish_face_should_update(ish_face_state_t *state, watch_date_time_t da
     return false;
 }
 
+// The peek is a deliberate escape from vagueness, so it ignores the 12h clock mode setting
+static void ish_face_display_exact_time(watch_date_time_t date_time) {
+    char buf[8];
+    snprintf(buf, sizeof(buf), "%02d%02d ", date_time.unit.hour, date_time.unit.minute);
+
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "NOW", "NW");
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
+    watch_set_colon();
+    snprintf(buf, sizeof(buf), "%02d", date_time.unit.second);
+    watch_display_text(WATCH_POSITION_SECONDS, buf);
+}
+
 // Updates the display with the current vague time and date
 static void ish_face_update_display(ish_face_state_t *state, watch_date_time_t date_time) {
     char buf[8];
+
+    if (state->peeking) {
+        ish_face_display_exact_time(date_time);
+        return;
+    }
+
     uint8_t hour = date_time.unit.hour;
     uint8_t minute = date_time.unit.minute;
     // Support 12/24h mode
@@ -139,6 +157,7 @@ void ish_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 // Called when the face is activated; forces a display update
 void ish_face_activate(void *context) {
     ish_face_state_t *state = (ish_face_state_t *)context;
+    state->peeking = false;
     state->last_displayed_minute = 0xFF; // Force update on activation
     watch_date_time_t date_time = movement_get_local_date_time();
     ish_face_update_display(state, date_time);
@@ -153,7 +172,7 @@ bool ish_face_loop(movement_event_t event, void *context) {
         case EVENT_TICK: {
             // Check for updates every second
             watch_date_time_t date_time = movement_get_local_date_time();
-            if (ish_face_should_update(state, date_time)) {
+            if (state->peeking || ish_face_should_update(state, date_time)) {
                 ish_face_update_display(state, date_time);
             }
             break;
@@ -172,6 +191,14 @@ bool ish_face_loop(movement_event_t event, void *context) {
             // Cycle through vagueness levels 1→2→3→1
             state->vagueness_level++;
             if (state->vagueness_level > ISH_LEVEL_MAX) state->vagueness_level = ISH_LEVEL_MIN;
+            state->last_displayed_minute = 0xFF; // Force update
+            watch_date_time_t date_time = movement_get_local_date_time();
+            ish_face_update_display(state, date_time);
+            break;
+        }
+        case EVENT_ALARM_LONG_PRESS:
+        case EVENT_ALARM_LONG_UP: {
+            state->peeking = (event.event_type == EVENT_ALARM_LONG_PRESS);
             state->last_displayed_minute = 0xFF; // Force update
             watch_date_time_t date_time = movement_get_local_date_time();
             ish_face_update_display(state, date_time);

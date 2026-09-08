@@ -36,11 +36,13 @@
  *   3: Quarter (e.g., "13:45") - rounds to nearest quarter hour
  *
  * Press ALARM to cycle levels. We honor the 24h clock mode setting but don't show the AM/PM indicator.
+ * Hold ALARM to peek at the exact time, always on a 24 hour clock.
  */
 
 typedef struct {
     uint8_t vagueness_level; // 1=hour, 2=half hour, 3=quarter
     uint8_t last_displayed_minute; // Last minute when we updated the display
+    bool peeking; // ALARM is held down, so show the exact time instead
 } ish_face_state_t;
 
 void ish_face_setup(uint8_t watch_face_index, void ** context_ptr);
