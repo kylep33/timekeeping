@@ -46,6 +46,16 @@ typedef enum {
     SIGNAL_TUNE_COUNT,
 } signal_tune_index_t;
 
+/// @brief A named rotation of watch faces with its own hourly chime.
+/// @details face_indexes hold positions in watch_faces[], so a face shared by several
+///          modes still occupies a single slot and a single context.
+typedef struct {
+    const char *name;
+    signal_tune_index_t signal_tune;
+    const uint8_t *face_indexes;
+    uint8_t num_faces;
+} movement_mode_t;
+
 /// @brief A struct that allows a watch face to report its state back to Movement.
 typedef struct {
     uint8_t wants_background_task: 1;
@@ -285,6 +295,7 @@ typedef struct {
     movement_settings_t settings;
 
     // transient properties
+    uint8_t current_mode_idx;
     int16_t current_face_idx;
     int16_t next_face_idx;
     bool watch_face_changed;
@@ -321,6 +332,17 @@ typedef struct {
 } movement_state_t;
 
 void movement_move_to_face(uint8_t watch_face_index);
+
+uint8_t movement_get_mode(void);
+uint8_t movement_num_modes(void);
+const char *movement_mode_name(uint8_t mode_index);
+
+/// @brief Switch to a mode, land on its first face and play its chime.
+void movement_set_mode(uint8_t mode_index);
+
+/// @brief True when the active face is the resting face of the current mode.
+/// @details The resting face is where every timeout lands, so it never receives EVENT_TIMEOUT itself.
+bool movement_on_resting_face(void);
 void movement_move_to_next_face(void);
 
 bool movement_default_loop_handler(movement_event_t event);
