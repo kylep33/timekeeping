@@ -27,29 +27,82 @@
 
 #include "movement_faces.h"
 
+/* Every face the watch can show. Modes below pick from these by name, so a face shared
+ * across modes still costs one slot and keeps one context.
+ */
+typedef enum {
+    FACE_CLOCK,
+    FACE_ISH,
+    FACE_TIMER,
+    FACE_STOPWATCH,
+    FACE_COIN_FLIP,
+    FACE_PROBABILITY,
+    FACE_PULSOMETER,
+    FACE_ENDLESS_RUNNER,
+    FACE_PING,
+    FACE_TAROT,
+    FACE_SIMON,
+    FACE_SUNRISE_SUNSET,
+    FACE_MOON_PHASE,
+    FACE_TIDE,
+    FACE_SET_TIME,
+    FACE_ADVANCED_ALARM,
+    FACE_FINETUNE,
+    FACE_NANOSEC,
+    FACE_SETTINGS,
+    FACE_VOLTAGE,
+    FACE_MODE_SELECT,
+} face_index_t;
+
 const watch_face_t watch_faces[] = {
-    clock_face,
-    world_clock_face,
-    sunrise_sunset_face,
-    moon_phase_face,
-    fast_stopwatch_face,
-    countdown_face,
-    alarm_face,
-    temperature_display_face,
-    voltage_face,
-    settings_face,
-    set_time_face,
+    [FACE_CLOCK] = clock_face,
+    [FACE_ISH] = ish_face,
+    [FACE_TIMER] = timer_face,
+    [FACE_STOPWATCH] = stopwatch_face,
+    [FACE_COIN_FLIP] = simple_coin_flip_face,
+    [FACE_PROBABILITY] = probability_face,
+    [FACE_PULSOMETER] = pulsometer_face,
+    [FACE_ENDLESS_RUNNER] = endless_runner_face,
+    [FACE_PING] = ping_face,
+    [FACE_TAROT] = tarot_face,
+    [FACE_SIMON] = simon_face,
+    [FACE_SUNRISE_SUNSET] = sunrise_sunset_face,
+    [FACE_MOON_PHASE] = moon_phase_face,
+    [FACE_TIDE] = tide_face,
+    [FACE_SET_TIME] = set_time_face,
+    [FACE_ADVANCED_ALARM] = advanced_alarm_face,
+    [FACE_FINETUNE] = finetune_face,
+    [FACE_NANOSEC] = nanosec_face,
+    [FACE_SETTINGS] = settings_face,
+    [FACE_VOLTAGE] = voltage_face,
+    [FACE_MODE_SELECT] = mode_select_face,
 };
 
 #define MOVEMENT_NUM_FACES (sizeof(watch_faces) / sizeof(watch_face_t))
 
-/* Determines what face to go to from the first face on long press of the Mode button.
- * Also excludes these faces from the normal rotation.
- * In the default firmware, this lets you access temperature and battery voltage with a long press of Mode.
- * Some folks also like to use this to hide the preferences and time set faces from the normal rotation.
- * If you don't want any faces to be excluded, set this to 0 and a long Mode press will have no effect.
+/* The first face of a mode is its resting face: every timeout returns there, so it should
+ * be something worth staring at rather than a screen a stray press would disturb.
  */
-#define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 5)
+static const uint8_t daily_faces[] = { FACE_ISH, FACE_TIMER, FACE_STOPWATCH, FACE_COIN_FLIP };
+static const uint8_t climb_faces[] = { FACE_CLOCK };
+static const uint8_t game_faces[] = { FACE_CLOCK, FACE_PROBABILITY, FACE_PULSOMETER, FACE_ENDLESS_RUNNER, FACE_PING, FACE_TAROT, FACE_SIMON };
+static const uint8_t outdoor_faces[] = { FACE_CLOCK, FACE_SUNRISE_SUNSET, FACE_MOON_PHASE, FACE_TIDE };
+static const uint8_t setup_faces[] = { FACE_CLOCK, FACE_SET_TIME, FACE_ADVANCED_ALARM, FACE_FINETUNE, FACE_NANOSEC, FACE_SETTINGS, FACE_VOLTAGE };
+
+#define MODE(display_name, tune, faces) { display_name, tune, faces, sizeof(faces) }
+
+/* Mode names are shown on the bottom row, so they must fit six characters. */
+const movement_mode_t movement_modes[] = {
+    MODE("DAILY", SIGNAL_TUNE_KIM_POSSIBLE, daily_faces),
+    MODE("CLIMB", SIGNAL_TUNE_ZELDA_SECRET, climb_faces),
+    MODE("GAME", SIGNAL_TUNE_MARIO_THEME, game_faces),
+    MODE("OUTDR", SIGNAL_TUNE_EVANGELION, outdoor_faces),
+    MODE("SETUP", SIGNAL_TUNE_MGS_CODEC, setup_faces),
+};
+
+#undef MODE
+
+#define MOVEMENT_NUM_MODES (sizeof(movement_modes) / sizeof(movement_mode_t))
 
 /* Hourly chime tune used until a mode selects its own. See movement_custom_signal_tunes.h for options. */
 #define MOVEMENT_DEFAULT_SIGNAL_TUNE SIGNAL_TUNE_KIM_POSSIBLE

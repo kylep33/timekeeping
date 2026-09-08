@@ -114,6 +114,8 @@ static int8_t *_pending_sequence;
 // The hourly chime tune, replaced whenever the wearer switches to a mode with its own tune
 static signal_tune_index_t _signal_tune = MOVEMENT_DEFAULT_SIGNAL_TUNE;
 
+static const movement_mode_t *_current_mode(void);
+
 // The note sequence of the default alarm
 int8_t alarm_tune[] = {
     BUZZER_NOTE_C8, 3,
@@ -499,10 +501,10 @@ bool movement_default_loop_handler(movement_event_t event) {
             }
             break;
         case EVENT_MODE_LONG_PRESS:
-            if (MOVEMENT_SECONDARY_FACE_INDEX && movement_state.current_face_idx == 0) {
-                movement_move_to_face(MOVEMENT_SECONDARY_FACE_INDEX);
+            if (movement_on_resting_face()) {
+                movement_move_to_face(FACE_MODE_SELECT);
             } else {
-                movement_move_to_face(0);
+                movement_move_to_face(_current_mode()->face_indexes[0]);
             }
             break;
         default:
@@ -517,14 +519,52 @@ void movement_move_to_face(uint8_t watch_face_index) {
     movement_state.next_face_idx = watch_face_index;
 }
 
-void movement_move_to_next_face(void) {
-    uint16_t face_max;
-    if (MOVEMENT_SECONDARY_FACE_INDEX) {
-        face_max = (movement_state.current_face_idx < (int16_t)MOVEMENT_SECONDARY_FACE_INDEX) ? MOVEMENT_SECONDARY_FACE_INDEX : MOVEMENT_NUM_FACES;
-    } else {
-        face_max = MOVEMENT_NUM_FACES;
+static const movement_mode_t *_current_mode(void) {
+    return &movement_modes[movement_state.current_mode_idx];
+}
+
+/// Faces reached by gesture rather than rotation are not in the list, so they rest at the start.
+static uint8_t _rotation_position(const movement_mode_t *mode, int16_t face_idx) {
+    for (uint8_t i = 0; i < mode->num_faces; i++) {
+        if (mode->face_indexes[i] == face_idx) return i;
     }
-    movement_move_to_face((movement_state.current_face_idx + 1) % face_max);
+    return 0;
+}
+
+uint8_t movement_get_mode(void) {
+    return movement_state.current_mode_idx;
+}
+
+uint8_t movement_num_modes(void) {
+    return MOVEMENT_NUM_MODES;
+}
+
+const char *movement_mode_name(uint8_t mode_index) {
+    if (mode_index >= MOVEMENT_NUM_MODES) return "";
+    return movement_modes[mode_index].name;
+}
+
+bool movement_on_resting_face(void) {
+    return movement_state.current_face_idx == _current_mode()->face_indexes[0];
+}
+
+void movement_set_mode(uint8_t mode_index) {
+    if (mode_index >= MOVEMENT_NUM_MODES) {
+        printf("Mode %d does not exist, staying in the current one. Valid modes are 0 to %d.\r\n",
+               mode_index, (int)MOVEMENT_NUM_MODES - 1);
+        return;
+    }
+
+    movement_state.current_mode_idx = mode_index;
+    movement_set_signal_tune(movement_modes[mode_index].signal_tune);
+    movement_move_to_face(movement_modes[mode_index].face_indexes[0]);
+    movement_play_signal();
+}
+
+void movement_move_to_next_face(void) {
+    const movement_mode_t *mode = _current_mode();
+    uint8_t next = (_rotation_position(mode, movement_state.current_face_idx) + 1) % mode->num_faces;
+    movement_move_to_face(mode->face_indexes[next]);
 }
 
 void movement_schedule_background_task(watch_date_time_t date_time) {
@@ -1193,6 +1233,9 @@ void app_setup(void) {
             watch_faces[i].setup(i, &watch_face_contexts[i]);
         }
 
+        movement_state.current_face_idx = _current_mode()->face_indexes[0];
+        movement_set_signal_tune(_current_mode()->signal_tune);
+
         watch_faces[movement_state.current_face_idx].activate(watch_face_contexts[movement_state.current_face_idx]);
         movement_volatile_state.pending_events |=  1 << EVENT_ACTIVATE;
     }
@@ -1352,7 +1395,7 @@ bool app_loop(void) {
     }
 
     // Now handle the EVENT_TIMEOUT
-    if (resign_timeout && movement_state.current_face_idx != 0) {
+    if (resign_timeout && !movement_on_resting_face()) {
         event.event_type = EVENT_TIMEOUT;
         can_sleep = wf->loop(event, watch_face_contexts[movement_state.current_face_idx]) && can_sleep;
     }
