@@ -108,7 +108,7 @@ const movement_mode_t movement_modes[] = {
     MODE("CLIMB", SIGNAL_TUNE_ZELDA_SECRET, climb_faces, false),
     MODE("GAME", SIGNAL_TUNE_MARIO_THEME, game_faces, false),
     MODE("PET", SIGNAL_TUNE_POWER_RANGERS, pet_faces, true),
-    MODE("WILD", SIGNAL_TUNE_EVANGELION, outdoor_faces, true),
+    MODE("EARTH", SIGNAL_TUNE_EVANGELION, outdoor_faces, true),
     MODE("SETUP", SIGNAL_TUNE_MGS_CODEC, setup_faces, false),
 };
 

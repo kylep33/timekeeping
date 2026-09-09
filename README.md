@@ -54,7 +54,7 @@ seconds). Each mode has its own face rotation and hourly chime tune.
 | CLIMB | clock, climb timer | Zelda secret | no |
 | GAME | clock, probability, pulsometer, endless runner, ping, tarot, simon | Mario theme | no |
 | PET | pet, pet food, pet play, endless runner, ping | Power Rangers | yes |
-| WILD | clock, sunrise/sunset, moon phase, tide | Evangelion | yes |
+| EARTH | clock, sunrise/sunset, moon phase, tide | Evangelion | yes |
 | SETUP | clock, set time, advanced alarm, finetune, nanosec, settings, voltage | MGS codec | no |
 
 The last column is `pet_enabled` in `movement_config.h`: whether the pet may
