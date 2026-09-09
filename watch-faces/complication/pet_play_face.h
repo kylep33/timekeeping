@@ -28,14 +28,12 @@
 /*
  * PET PLAY face
  *
- * What there is to do with the pet. Poking is handled here; every other entry
- * hands off to a game face listed in pet_games, so the menu grows with the games
- * that are compiled in.
+ * The pet's games, listed in pet_games so the menu grows with whatever is
+ * compiled in. Poking and its kin live on the home face's interact button now,
+ * not here.
  *
- * A poke is also the cure for a sick pet, and it takes a few of them.
- *
- * ALARM tap:   next thing to do
- * ALARM hold:  do it
+ * ALARM tap:   next game
+ * ALARM hold:  play it
  */
 
 #include "movement.h"
@@ -43,8 +41,6 @@
 
 typedef struct {
     uint8_t selection;
-    uint8_t tick;
-    pet_approach_t poke;
 } pet_play_face_state_t;
 
 void pet_play_face_setup(uint8_t watch_face_index, void ** context_ptr);

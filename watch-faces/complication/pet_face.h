@@ -33,7 +33,7 @@
  *
  * The top right shows its age in days.
  *
- * ALARM tap:   nudge it, which it resents while it is asleep
+ * ALARM tap:   interact with it, which it resents while it is asleep
  * ALARM hold:  peek the exact time; on a dead pet, hatch the next one
  * LIGHT hold:  step through hunger, mood, health and age
  */
@@ -41,11 +41,16 @@
 #include "movement.h"
 #include "pet.h"
 
+// How long an interaction sprite plays before the pet goes back to its usual mood.
+#define PET_FACE_REACTION_TICKS 4
+
 typedef struct {
     uint8_t position;
     uint8_t tick;
     uint8_t stat_page;
     uint8_t stat_ticks;
+    uint8_t reaction_ticks_left;
+    pet_interact_kind_t reaction;
     bool peeking;
     bool showing_stats;
 } pet_face_state_t;

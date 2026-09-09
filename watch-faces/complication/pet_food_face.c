@@ -55,8 +55,11 @@ static void _redraw(pet_food_face_state_t *state) {
     snprintf(buf, sizeof(buf), "%2d", pet_get()->hunger % TOP_RIGHT_WRAP);
     watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
 
-    if (state->serving.running) pet_approach_draw(&state->serving, FOODS[state->selection].sprite, state->tick);
-    else watch_display_text(WATCH_POSITION_BOTTOM, FOODS[state->selection].name);
+    if (state->serving.running) {
+        pet_approach_draw(&state->serving, FOODS[state->selection].sprite, pet_eating_reaction(&state->serving, state->tick));
+    } else {
+        watch_display_text(WATCH_POSITION_BOTTOM, FOODS[state->selection].name);
+    }
 }
 
 static void _select(pet_food_face_state_t *state) {
