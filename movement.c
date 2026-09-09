@@ -544,6 +544,11 @@ const char *movement_mode_name(uint8_t mode_index) {
     return movement_modes[mode_index].name;
 }
 
+bool movement_mode_pet_enabled(uint8_t mode_index) {
+    if (mode_index >= MOVEMENT_NUM_MODES) return false;
+    return movement_modes[mode_index].pet_enabled;
+}
+
 void movement_move_to_resting_face(void) {
     movement_move_to_face(_current_mode()->face_indexes[0]);
 }
