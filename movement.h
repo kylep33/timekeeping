@@ -54,6 +54,7 @@ typedef struct {
     signal_tune_index_t signal_tune;
     const uint8_t *face_indexes;
     uint8_t num_faces;
+    bool pet_enabled;   ///< whether the pet may interrupt this mode to ask for something
 } movement_mode_t;
 
 /// @brief A struct that allows a watch face to report its state back to Movement.
@@ -336,6 +337,9 @@ void movement_move_to_face(uint8_t watch_face_index);
 uint8_t movement_get_mode(void);
 uint8_t movement_num_modes(void);
 const char *movement_mode_name(uint8_t mode_index);
+
+/// @brief Whether the pet is allowed to shout for attention while in this mode.
+bool movement_mode_pet_enabled(uint8_t mode_index);
 
 /// @brief Switch to a mode, land on its first face and play its chime.
 void movement_set_mode(uint8_t mode_index);
