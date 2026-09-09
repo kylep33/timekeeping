@@ -43,7 +43,7 @@
 
 // The bottom row is the pet's whole world; it wanders the width of it.
 #define PET_ROW_LENGTH 6
-#define PET_SPRITE_WIDTH 2
+#define PET_SPRITE_WIDTH 1
 #define PET_ANIMATION_FRAMES 2
 
 typedef enum {
@@ -55,6 +55,17 @@ typedef enum {
     PET_MOOD_DEAD,
     PET_MOOD_COUNT,
 } pet_mood_t;
+
+/* What short-pressing ALARM on the home face does while the pet is awake. Which one
+ * happens is picked at random, so the same button turns into a handful of different
+ * little moments instead of one repeated animation.
+ */
+typedef enum {
+    PET_INTERACT_POKE,
+    PET_INTERACT_PAT,
+    PET_INTERACT_WAVE,
+    PET_INTERACT_COUNT,
+} pet_interact_kind_t;
 
 /// @brief An entry in the play menu that hands off to a game face.
 typedef struct {
@@ -95,7 +106,7 @@ void pet_hatch(void);
 pet_mood_t pet_mood(void);
 uint16_t pet_age_days(void);
 
-/// @brief The two characters of creature for a mood, alternating with frame.
+/// @brief The current species' sprite for a mood, alternating with frame.
 const char *pet_sprite(pet_mood_t mood, uint8_t frame);
 
 /// @brief Blanks a bottom row buffer, which must hold PET_ROW_LENGTH + 1 characters.
@@ -104,8 +115,8 @@ void pet_row_clear(char *row);
 /// @brief Draws a sprite into a blanked row, clipping anything past the edge.
 void pet_row_place(char *row, uint8_t position, const char *sprite);
 
-/* A prop crossing the row into the pet, which is what both feeding and poking look
- * like. The pet stands aside during one so the prop has room to arrive.
+/* A prop crossing the row into the pet, which is what feeding looks like. The pet
+ * stands aside so the prop has room to arrive.
  */
 typedef struct {
     uint8_t prop_position;
@@ -118,11 +129,21 @@ void pet_approach_start(pet_approach_t *approach);
 /// @brief Steps the animation on. Returns true on the single tick the prop lands.
 bool pet_approach_advance(pet_approach_t *approach);
 
-/// @brief Draws the pet, and the prop until it lands.
-void pet_approach_draw(const pet_approach_t *approach, const char *prop, uint8_t frame);
+/// @brief Draws the prop until it lands, and the given reaction sprite for the pet.
+void pet_approach_draw(const pet_approach_t *approach, const char *prop, const char *reaction);
+
+/// @brief The pet's reaction to a landed approach: eating while it is chewing, its
+///        ordinary mood sprite once the plate is clear.
+const char *pet_eating_reaction(const pet_approach_t *approach, uint8_t frame);
 
 void pet_feed(uint8_t nutrition);
-void pet_poke(void);
+
+/// @brief Nudges the awake pet with a random interaction, or scolds you for waking it.
+/// @return which interaction played, or PET_INTERACT_COUNT if the pet did nothing.
+pet_interact_kind_t pet_interact(void);
+
+/// @brief The current species' reaction sprite for an interaction, alternating with frame.
+const char *pet_interact_sprite(pet_interact_kind_t kind, uint8_t frame);
 
 /// @brief Charges the pet's mood for a button press that cut its sleep short.
 void pet_disturb(void);

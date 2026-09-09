@@ -106,6 +106,12 @@ static void _update_indicators(pet_mood_t mood) {
     else watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
 }
 
+static const char *_current_sprite(pet_face_state_t *state, pet_mood_t mood) {
+    if (state->reaction_ticks_left > 0) return pet_interact_sprite(state->reaction, state->tick);
+
+    return pet_sprite(mood, _frame_for(mood, state->tick));
+}
+
 static void _display_pet(pet_face_state_t *state, pet_mood_t mood) {
     char row[PET_ROW_LENGTH + 1];
     char buf[4];
@@ -116,7 +122,7 @@ static void _display_pet(pet_face_state_t *state, pet_mood_t mood) {
     watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
 
     pet_row_clear(row);
-    pet_row_place(row, state->position, pet_sprite(mood, _frame_for(mood, state->tick)));
+    pet_row_place(row, state->position, _current_sprite(state, mood));
     watch_display_text(WATCH_POSITION_BOTTOM, row);
 }
 
@@ -182,6 +188,12 @@ static void _advance(pet_face_state_t *state, pet_mood_t mood) {
         return;
     }
 
+    // Mid-reaction the pet holds still so there's something to actually look at.
+    if (state->reaction_ticks_left > 0) {
+        state->reaction_ticks_left--;
+        return;
+    }
+
     // A sleeping, sick or dying pet stays put; only a comfortable one bothers moving.
     if (mood == PET_MOOD_HAPPY || mood == PET_MOOD_HUNGRY) state->position = _wander(state->position);
 }
@@ -193,6 +205,15 @@ static void _handle_hold(pet_face_state_t *state) {
     }
 
     state->peeking = true;
+}
+
+static void _handle_interact(pet_face_state_t *state) {
+    pet_interact_kind_t kind = pet_interact();
+
+    if (kind == PET_INTERACT_COUNT) return;
+
+    state->reaction = kind;
+    state->reaction_ticks_left = PET_FACE_REACTION_TICKS;
 }
 
 void pet_face_setup(uint8_t watch_face_index, void ** context_ptr) {
@@ -208,6 +229,7 @@ void pet_face_activate(void *context) {
 
     state->peeking = false;
     state->showing_stats = false;
+    state->reaction_ticks_left = 0;
     movement_request_tick_frequency(TICK_FREQUENCY_HZ);
 }
 
@@ -224,8 +246,7 @@ bool pet_face_loop(movement_event_t event, void *context) {
             _redraw(state);
             break;
         case EVENT_ALARM_BUTTON_UP:
-            // Prodding the creature is fair game while it is up; at night it is not free.
-            pet_disturb();
+            _handle_interact(state);
             _redraw(state);
             break;
         case EVENT_ALARM_LONG_PRESS:

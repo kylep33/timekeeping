@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+#include <stdlib.h>
 #include <string.h>
 #include "pet.h"
 #include "filesystem.h"
@@ -54,6 +55,8 @@ static const uint16_t ILLNESS_ODDS = 12;
 static const uint8_t POKES_TO_CURE = 3;
 
 static const uint8_t POKE_HAPPINESS_GAIN = 6;
+static const uint8_t PAT_HAPPINESS_GAIN = 5;
+static const uint8_t WAVE_HAPPINESS_GAIN = 3;
 static const uint8_t DISTURB_HAPPINESS_COST = 5;
 static const uint8_t HATCH_NEED = 80;
 
@@ -76,19 +79,43 @@ static char PET_FILE_NAME[] = "pet.dat";
 // The pet stands aside during an approach so the prop has room to arrive.
 static const uint8_t APPROACH_PET_POSITION = 1;
 static const uint8_t APPROACH_LANDING_POSITION = APPROACH_PET_POSITION + PET_SPRITE_WIDTH;
-static const uint8_t APPROACH_HOLD_TICKS = 3;
 
-/* Seven segment glyphs, so these are picked from what the bottom row can actually draw.
- * Two frames each: the pet wanders across the row, and blinks or twitches in place.
+// One eating frame plays per hold tick, so a landed approach finishes chewing exactly as it ends.
+#define PET_EATING_FRAMES 3
+static const uint8_t APPROACH_HOLD_TICKS = PET_EATING_FRAMES;
+
+/* What a pet looks like: its idle sprite per mood, its reaction to being interacted
+ * with, and how it chews. All seven segment glyphs, picked from what the bottom row
+ * can actually draw. Only one species exists today (Gnocci); more can join this table
+ * later without the rest of the module changing.
  */
-static const char *const MOOD_SPRITES[PET_MOOD_COUNT][PET_ANIMATION_FRAMES] = {
-    [PET_MOOD_HAPPY]    = { "oo", "--" },
-    [PET_MOOD_HUNGRY]   = { "OO", "oo" },
-    [PET_MOOD_SICK]     = { "xx", "XX" },
-    [PET_MOOD_ASLEEP]   = { "zz", "z " },
-    [PET_MOOD_CRITICAL] = { "@@", "  " },
-    [PET_MOOD_DEAD]     = { "__", "__" },
+typedef struct {
+    const char *mood_sprites[PET_MOOD_COUNT][PET_ANIMATION_FRAMES];
+    const char *interact_sprites[PET_INTERACT_COUNT][PET_ANIMATION_FRAMES];
+    const char *eating_frames[PET_EATING_FRAMES];
+} pet_species_t;
+
+static const pet_species_t SPECIES_GNOCCI = {
+    .mood_sprites = {
+        [PET_MOOD_HAPPY]    = { "o", "-" },
+        [PET_MOOD_HUNGRY]   = { "O", "o" },
+        [PET_MOOD_SICK]     = { "x", "X" },
+        [PET_MOOD_ASLEEP]   = { "z", " " },
+        [PET_MOOD_CRITICAL] = { "@", " " },
+        [PET_MOOD_DEAD]     = { "_", "_" },
+    },
+    .interact_sprites = {
+        [PET_INTERACT_POKE] = { "!", "o" },
+        [PET_INTERACT_PAT]  = { "-", "o" },
+        [PET_INTERACT_WAVE] = { "O", "o" },
+    },
+    // Rounds out, opens its mouth, then settles back down.
+    .eating_frames = { "O", "C", "o" },
 };
+
+static const pet_species_t *_species(void) {
+    return &SPECIES_GNOCCI;
+}
 
 typedef enum {
     PET_CALL_NONE,
@@ -158,6 +185,17 @@ static int8_t _tune_eat[] = {
 
 static int8_t _tune_poke[] = {
     BUZZER_NOTE_A6, 3,
+    0
+};
+
+static int8_t _tune_pat[] = {
+    BUZZER_NOTE_G5, 3,
+    0
+};
+
+static int8_t _tune_wave[] = {
+    BUZZER_NOTE_C5, 2,
+    BUZZER_NOTE_E5, 2,
     0
 };
 
@@ -398,7 +436,13 @@ uint16_t pet_age_days(void) {
 const char *pet_sprite(pet_mood_t mood, uint8_t frame) {
     if (mood >= PET_MOOD_COUNT) mood = PET_MOOD_HAPPY;
 
-    return MOOD_SPRITES[mood][frame % PET_ANIMATION_FRAMES];
+    return _species()->mood_sprites[mood][frame % PET_ANIMATION_FRAMES];
+}
+
+const char *pet_interact_sprite(pet_interact_kind_t kind, uint8_t frame) {
+    if (kind >= PET_INTERACT_COUNT) kind = PET_INTERACT_POKE;
+
+    return _species()->interact_sprites[kind][frame % PET_ANIMATION_FRAMES];
 }
 
 void pet_row_clear(char *row) {
@@ -438,16 +482,22 @@ bool pet_approach_advance(pet_approach_t *approach) {
     return true;
 }
 
-void pet_approach_draw(const pet_approach_t *approach, const char *prop, uint8_t frame) {
+void pet_approach_draw(const pet_approach_t *approach, const char *prop, const char *reaction) {
     char row[PET_ROW_LENGTH + 1];
 
     pet_row_clear(row);
-    pet_row_place(row, APPROACH_PET_POSITION, pet_sprite(pet_mood(), frame));
+    pet_row_place(row, APPROACH_PET_POSITION, reaction);
 
     // Once the prop has landed the pet is left to react to it on its own.
     if (approach->hold_ticks == 0) pet_row_place(row, approach->prop_position, prop);
 
     watch_display_text(WATCH_POSITION_BOTTOM, row);
+}
+
+const char *pet_eating_reaction(const pet_approach_t *approach, uint8_t frame) {
+    if (approach->hold_ticks > 0) return _species()->eating_frames[PET_EATING_FRAMES - approach->hold_ticks];
+
+    return pet_sprite(pet_mood(), frame);
 }
 
 void pet_feed(uint8_t nutrition) {
@@ -459,21 +509,35 @@ void pet_feed(uint8_t nutrition) {
     _save();
 }
 
-void pet_poke(void) {
-    _settle();
-    if (_pet.dead) return;
-
+// Prodding is what shakes an illness off, and it takes more than one go.
+static void _poke(void) {
     _pet.happiness = _raise(_pet.happiness, POKE_HAPPINESS_GAIN);
 
-    // Prodding is what shakes an illness off, and it takes more than one go.
     if (_pet.sick) {
         _pet.pokes_while_sick++;
         if (_pet.pokes_while_sick >= POKES_TO_CURE) _pet.sick = false;
     }
 
     movement_play_sequence(_tune_poke, BUZZER_PRIORITY_BUTTON);
-    _save();
 }
+
+static void _pat(void) {
+    _pet.happiness = _raise(_pet.happiness, PAT_HAPPINESS_GAIN);
+    movement_play_sequence(_tune_pat, BUZZER_PRIORITY_BUTTON);
+}
+
+static void _wave(void) {
+    _pet.happiness = _raise(_pet.happiness, WAVE_HAPPINESS_GAIN);
+    movement_play_sequence(_tune_wave, BUZZER_PRIORITY_BUTTON);
+}
+
+typedef void (*pet_interact_effect_t)(void);
+
+static const pet_interact_effect_t INTERACT_EFFECTS[PET_INTERACT_COUNT] = {
+    [PET_INTERACT_POKE] = _poke,
+    [PET_INTERACT_PAT] = _pat,
+    [PET_INTERACT_WAVE] = _wave,
+};
 
 void pet_disturb(void) {
     _settle();
@@ -481,6 +545,24 @@ void pet_disturb(void) {
 
     _pet.happiness = _lower(_pet.happiness, DISTURB_HAPPINESS_COST);
     _save();
+}
+
+pet_interact_kind_t pet_interact(void) {
+    _settle();
+    if (_pet.dead) return PET_INTERACT_COUNT;
+
+    // Waking it up is not the fun kind of attention, so it gets the scold instead.
+    if (_pet.asleep) {
+        pet_disturb();
+        return PET_INTERACT_COUNT;
+    }
+
+    pet_interact_kind_t kind = rand() % PET_INTERACT_COUNT;
+
+    INTERACT_EFFECTS[kind]();
+    _save();
+
+    return kind;
 }
 
 static uint32_t _call_interval_s(void) {
