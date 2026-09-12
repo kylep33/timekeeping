@@ -36,8 +36,7 @@ typedef enum {
 } PingPaddleState;
 
 typedef enum {
-    SCREEN_TITLE = 0,
-    SCREEN_SCORE,
+    SCREEN_SCORE = 0,
     SCREEN_PLAYING,
     SCREEN_LOSE,
     SCREEN_COUNT
@@ -64,7 +63,7 @@ typedef enum {
 
 #define BALL_POS_MAX 11
 #define BALL_OFF_SCREEN 100
-#define MAX_HI_SCORE 9999  // Max hi score to store and display on the title screen.
+#define MAX_HI_SCORE 9999  // Max hi score to store and display on the score screen.
 #define MAX_DISP_SCORE 39  // The top-right digits can't properly display above 39
 
 typedef struct {
@@ -84,7 +83,6 @@ typedef struct {
 } game_state_t;
 
 static game_state_t game_state;
-static int8_t _ticks_show_title = 0;
 static bool _is_custom_lcd;
 
 static int8_t start_tune[] = {
@@ -379,16 +377,6 @@ static void disable_tap_control(ping_state_t *state) {
     }
 }
 
-static void display_title(ping_state_t *state) {
-    movement_request_tick_frequency(1);
-    game_state.curr_screen = SCREEN_TITLE;
-    watch_clear_colon();
-    watch_display_text_with_fallback(WATCH_POSITION_TOP, "Ping", "PI  ");
-    watch_display_text(WATCH_POSITION_BOTTOM, " Ping ");
-    display_sound_indicator(state -> soundOn);
-    _ticks_show_title = 1;
-}
-
 static void display_score_screen(ping_state_t *state) {
     uint16_t hi_score = state -> hi_score;
     uint8_t difficulty = state -> difficulty;
@@ -496,17 +484,11 @@ bool ping_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
             disable_tap_control(state);
             check_and_reset_hi_score(state);
-            display_title(state);
+            display_score_screen(state);
             break;
         case EVENT_TICK:
             switch (game_state.curr_screen)
             {
-            case SCREEN_TITLE:
-                if (_ticks_show_title > 0) {_ticks_show_title--;}
-                else {
-                    watch_clear_display();
-                    display_score_screen(state);
-                }
             case SCREEN_SCORE:
             case SCREEN_LOSE:
                 break;
@@ -523,9 +505,6 @@ bool ping_face_loop(movement_event_t event, void *context) {
                     enable_tap_control(state);
                     begin_playing(state);
                     break;
-                case SCREEN_TITLE:
-                    enable_tap_control(state);
-                    // fall through
                 case SCREEN_LOSE:
                     watch_clear_display();
                     display_score_screen(state);
@@ -560,7 +539,7 @@ bool ping_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_ALARM_LONG_PRESS:
-            if (game_state.curr_screen == SCREEN_TITLE || game_state.curr_screen == SCREEN_SCORE)
+            if (game_state.curr_screen == SCREEN_SCORE)
                 toggle_sound(state);
             break;
         case EVENT_TIMEOUT:

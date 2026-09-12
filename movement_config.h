@@ -49,6 +49,7 @@ typedef enum {
     FACE_PET,
     FACE_PET_FOOD,
     FACE_PET_PLAY,
+    FACE_PET_SING,
     FACE_SET_TIME,
     FACE_ADVANCED_ALARM,
     FACE_FINETUNE,
@@ -77,6 +78,7 @@ const watch_face_t watch_faces[] = {
     [FACE_PET] = pet_face,
     [FACE_PET_FOOD] = pet_food_face,
     [FACE_PET_PLAY] = pet_play_face,
+    [FACE_PET_SING] = pet_sing_face,
     [FACE_SET_TIME] = set_time_face,
     [FACE_ADVANCED_ALARM] = advanced_alarm_face,
     [FACE_FINETUNE] = finetune_face,
@@ -94,8 +96,8 @@ const watch_face_t watch_faces[] = {
 static const uint8_t daily_faces[] = { FACE_ISH, FACE_TIMER, FACE_STOPWATCH, FACE_COIN_FLIP };
 static const uint8_t climb_faces[] = { FACE_CLOCK, FACE_CLIMB_TIMER };
 static const uint8_t game_faces[] = { FACE_CLOCK, FACE_PROBABILITY, FACE_PULSOMETER, FACE_ENDLESS_RUNNER, FACE_PING, FACE_TAROT, FACE_SIMON };
-static const uint8_t pet_faces[] = { FACE_PET, FACE_PET_FOOD, FACE_PET_PLAY };
-static const uint8_t outdoor_faces[] = { FACE_CLOCK, FACE_SUNRISE_SUNSET, FACE_MOON_PHASE, FACE_TIDE };
+static const uint8_t pet_faces[] = { FACE_PET, FACE_PET_FOOD, FACE_PET_PLAY, FACE_PET_SING };
+static const uint8_t outdoor_faces[] = { FACE_CLOCK, FACE_SUNRISE_SUNSET, FACE_MOON_PHASE };
 static const uint8_t setup_faces[] = { FACE_CLOCK, FACE_SET_TIME, FACE_ADVANCED_ALARM, FACE_FINETUNE, FACE_NANOSEC, FACE_SETTINGS, FACE_VOLTAGE };
 
 #define MODE(display_name, tune, faces, pet) { display_name, tune, faces, sizeof(faces), pet }
@@ -104,11 +106,11 @@ static const uint8_t setup_faces[] = { FACE_CLOCK, FACE_SET_TIME, FACE_ADVANCED_
  * The last flag says whether the pet may interrupt the mode to ask for something.
  */
 const movement_mode_t movement_modes[] = {
-    MODE("DAILY", SIGNAL_TUNE_KIM_POSSIBLE, daily_faces, true),
+    MODE("DAILY", SIGNAL_TUNE_AXEL_F, daily_faces, true),
     MODE("CLIMB", SIGNAL_TUNE_ZELDA_SECRET, climb_faces, false),
     MODE("GAME", SIGNAL_TUNE_MARIO_THEME, game_faces, false),
-    MODE("PET", SIGNAL_TUNE_POWER_RANGERS, pet_faces, true),
-    MODE("EARTH", SIGNAL_TUNE_EVANGELION, outdoor_faces, true),
+    MODE("PET", SIGNAL_TUNE_KIM_POSSIBLE, pet_faces, true),
+    MODE("EARTH", SIGNAL_TUNE_INDIANA_JONES, outdoor_faces, true),
     MODE("SETUP", SIGNAL_TUNE_MGS_CODEC, setup_faces, false),
 };
 
@@ -137,7 +139,7 @@ const uint8_t pet_num_games = sizeof(pet_games) / sizeof(pet_game_t);
 #define MOVEMENT_DEFAULT_BLUE_COLOR 0x0
 
 /* Set to true for 24h mode or false for 12h mode */
-#define MOVEMENT_DEFAULT_24H_MODE false
+#define MOVEMENT_DEFAULT_24H_MODE true
 
 /* Enable or disable the sound on mode button press */
 #define MOVEMENT_DEFAULT_BUTTON_SOUND true

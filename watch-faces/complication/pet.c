@@ -57,8 +57,12 @@ static const uint8_t POKES_TO_CURE = 3;
 static const uint8_t POKE_HAPPINESS_GAIN = 6;
 static const uint8_t PAT_HAPPINESS_GAIN = 5;
 static const uint8_t WAVE_HAPPINESS_GAIN = 3;
+static const uint8_t SING_HAPPINESS_GAIN = 8;
 static const uint8_t DISTURB_HAPPINESS_COST = 5;
 static const uint8_t HATCH_NEED = 80;
+
+// Prodded awake, it stays up long enough for a meal and a game before nodding off again.
+static const uint32_t NUDGED_AWAKE_MIN = 10;
 
 static const uint32_t CRITICAL_GRACE_HOURS = 12;
 static const uint32_t CALL_INTERVAL_MIN = 15;
@@ -73,26 +77,29 @@ static const uint32_t SALT_BEDTIME = 1;
 static const uint32_t SALT_WAKE = 2;
 static const uint32_t SALT_ILLNESS = 3;
 
-static const uint8_t PET_FORMAT_VERSION = 1;
+static const uint8_t PET_FORMAT_VERSION = 2;
 static char PET_FILE_NAME[] = "pet.dat";
 
-// The pet stands aside during an approach so the prop has room to arrive.
-static const uint8_t APPROACH_PET_POSITION = 1;
-static const uint8_t APPROACH_LANDING_POSITION = APPROACH_PET_POSITION + PET_SPRITE_WIDTH;
+// Close enough that the pet can tell what is coming, and rounds out in anticipation.
+static const uint8_t APPROACH_SWELL_DISTANCE = 2;
 
-// One eating frame plays per hold tick, so a landed approach finishes chewing exactly as it ends.
-#define PET_EATING_FRAMES 3
-static const uint8_t APPROACH_HOLD_TICKS = PET_EATING_FRAMES;
+// Long enough to read as a mouthful and a swallow at the food face's tick rate.
+static const uint8_t APPROACH_MOUTH_TICKS = 2;
+static const uint8_t APPROACH_SETTLE_TICKS = 2;
 
 /* What a pet looks like: its idle sprite per mood, its reaction to being interacted
- * with, and how it chews. All seven segment glyphs, picked from what the bottom row
- * can actually draw. Only one species exists today (Gnocci); more can join this table
- * later without the rest of the module changing.
+ * with, and how it chews. All seven segment glyphs, and drawable in both strips it
+ * wanders, though the classic LCD rounds a few of them up to uppercase in the top
+ * left. Only one species exists today (Gnocci); more can join this table later
+ * without the rest of the module changing.
  */
 typedef struct {
     const char *mood_sprites[PET_MOOD_COUNT][PET_ANIMATION_FRAMES];
     const char *interact_sprites[PET_INTERACT_COUNT][PET_ANIMATION_FRAMES];
-    const char *eating_frames[PET_EATING_FRAMES];
+    const char *sing_mouth_shut;  ///< the closed half of the singing hinge; the open half is LCD-specific
+    const char *eating_ball;    ///< sat waiting, with the food still some way off
+    const char *eating_swell;   ///< rounded out, the food nearly here
+    const char *eating_mouth;   ///< open, taking it
 } pet_species_t;
 
 static const pet_species_t SPECIES_GNOCCI = {
@@ -109,8 +116,10 @@ static const pet_species_t SPECIES_GNOCCI = {
         [PET_INTERACT_PAT]  = { "-", "o" },
         [PET_INTERACT_WAVE] = { "O", "o" },
     },
-    // Rounds out, opens its mouth, then settles back down.
-    .eating_frames = { "O", "C", "o" },
+    .sing_mouth_shut = "o",
+    .eating_ball = "o",
+    .eating_swell = "O",
+    .eating_mouth = "C",
 };
 
 static const pet_species_t *_species(void) {
@@ -213,6 +222,9 @@ static pet_t _pet;
 static bool _loaded;
 static pet_call_t _pending_call;
 static uint32_t _called_at_s;
+
+// Where it wanders to is worth nobody's flash, so it starts mid row each boot.
+static uint8_t _position = PET_ROW_LENGTH / 2;
 
 static uint8_t _raise(uint8_t stat, uint8_t amount) {
     return (amount > PET_STAT_MAX - stat) ? PET_STAT_MAX : stat + amount;
@@ -348,9 +360,12 @@ static void _settle_mortality(uint32_t now_s) {
     _save();
 }
 
-// Both ends of the night are worth announcing, so the transition is what gets saved.
-static void _settle_sleep(watch_date_time_t now) {
-    bool asleep = _is_bedtime(now);
+/* Both ends of the night are worth announcing, so the transition is what gets saved.
+ * Being prodded awake holds the night off for a few minutes, and when that runs out
+ * the pet drops back off on its own.
+ */
+static void _settle_sleep(watch_date_time_t now, uint32_t now_s) {
+    bool asleep = _is_bedtime(now) && now_s >= _pet.awake_until_s;
     if (asleep == _pet.asleep) return;
 
     _pet.asleep = asleep;
@@ -379,7 +394,7 @@ static void _settle(void) {
     _pet.settled_at_s = now_s;
     _settle_illness(now);
     _settle_mortality(now_s);
-    _settle_sleep(now);
+    _settle_sleep(now, now_s);
 }
 
 const pet_t *pet_get(void) {
@@ -439,65 +454,169 @@ const char *pet_sprite(pet_mood_t mood, uint8_t frame) {
     return _species()->mood_sprites[mood][frame % PET_ANIMATION_FRAMES];
 }
 
+/* The top half of a digit is drawn the same way on both LCDs, but the classic one's
+ * wiring only keeps the bottom half clean at some positions. Good enough for a hop
+ * that reads as lifting off rather than teleporting.
+ */
+const char *pet_rise_sprite(bool stretched) {
+    if (stretched) return "^";
+
+    return watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM ? "u" : "v";
+}
+
 const char *pet_interact_sprite(pet_interact_kind_t kind, uint8_t frame) {
     if (kind >= PET_INTERACT_COUNT) kind = PET_INTERACT_POKE;
 
     return _species()->interact_sprites[kind][frame % PET_ANIMATION_FRAMES];
 }
 
-void pet_row_clear(char *row) {
-    memset(row, ' ', PET_ROW_LENGTH);
-    row[PET_ROW_LENGTH] = '\0';
+/* A closed mouth is C+D+E+G: a small box sitting low in the digit, its lid resting on
+ * the middle segment. Rather than a wider glyph for open, the lid itself hinges up to
+ * the top segment - which is exactly the low, lidless box pet_rise_sprite already
+ * draws, so the open frame borrows it instead of duplicating the LCD-type check.
+ */
+const char *pet_sing_sprite(uint8_t frame) {
+    if (frame % PET_ANIMATION_FRAMES == 0) return _species()->sing_mouth_shut;
+
+    return pet_rise_sprite(false);
 }
 
-void pet_row_place(char *row, uint8_t position, const char *sprite) {
+uint8_t pet_position(void) {
+    return _position;
+}
+
+void pet_set_position(uint8_t position) {
+    _position = position;
+}
+
+uint8_t pet_top_row_length(void) {
+    // The classic LCD's top left is two cells; the custom one adds a third.
+    return watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM ? PET_TOP_ROW_LENGTH : PET_TOP_ROW_LENGTH - 1;
+}
+
+static void _row_clear(char *row, uint8_t length) {
+    memset(row, ' ', length);
+    row[length] = '\0';
+}
+
+static void _row_place(char *row, uint8_t length, uint8_t position, const char *sprite) {
     for (uint8_t i = 0; sprite[i] != '\0'; i++) {
-        if (position + i >= PET_ROW_LENGTH) return;
+        if (position + i >= length) return;
         row[position + i] = sprite[i];
     }
 }
 
-void pet_approach_start(pet_approach_t *approach) {
-    approach->prop_position = PET_ROW_LENGTH - 1;
-    approach->hold_ticks = 0;
+void pet_row_clear(char *row) {
+    _row_clear(row, PET_ROW_LENGTH);
+}
+
+void pet_row_place(char *row, uint8_t position, const char *sprite) {
+    _row_place(row, PET_ROW_LENGTH, position, sprite);
+}
+
+void pet_top_clear(char *row) {
+    _row_clear(row, PET_TOP_ROW_LENGTH);
+}
+
+void pet_top_place(char *row, uint8_t position, const char *sprite) {
+    _row_place(row, pet_top_row_length(), position, sprite);
+}
+
+void pet_top_draw(const char *row) {
+    // The fallback drops the third cell, which is the one the classic LCD hasn't got.
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, row, row);
+}
+
+static uint8_t _prop_distance(const pet_approach_t *approach) {
+    if (approach->prop_position > approach->pet_position) return approach->prop_position - approach->pet_position;
+
+    return approach->pet_position - approach->prop_position;
+}
+
+static void _approach_enter(pet_approach_t *approach, pet_approach_phase_t phase) {
+    approach->phase = phase;
+    approach->phase_ticks = 0;
+}
+
+void pet_approach_start(pet_approach_t *approach, uint8_t pet_position) {
+    // It heads for whichever end it is already nearest, and the food comes from the other.
+    bool nearer_left = pet_position < PET_ROW_LENGTH / 2;
+
+    approach->pet_position = pet_position;
+    approach->prop_from_left = !nearer_left;
+    approach->prop_position = nearer_left ? PET_ROW_LENGTH - 1 : 0;
     approach->running = true;
+    _approach_enter(approach, PET_APPROACH_WALKING);
+}
+
+static uint8_t _approach_target(const pet_approach_t *approach) {
+    return approach->prop_from_left ? PET_ROW_LENGTH - 1 : 0;
 }
 
 bool pet_approach_advance(pet_approach_t *approach) {
     if (!approach->running) return false;
 
-    if (approach->hold_ticks > 0) {
-        approach->hold_ticks--;
-        approach->running = approach->hold_ticks > 0;
-        return false;
+    approach->phase_ticks++;
+
+    switch (approach->phase) {
+        case PET_APPROACH_WALKING: {
+            uint8_t target = _approach_target(approach);
+
+            if (approach->pet_position != target) {
+                approach->pet_position += (approach->pet_position < target) ? 1 : -1;
+                // It really did walk over there, so that is where the home face finds it.
+                pet_set_position(approach->pet_position);
+                break;
+            }
+
+            _approach_enter(approach, PET_APPROACH_INCOMING);
+            break;
+        }
+        case PET_APPROACH_INCOMING:
+            // The food stops in the cell alongside the pet, which is where it goes down.
+            if (_prop_distance(approach) > 1) {
+                approach->prop_position += approach->prop_from_left ? 1 : -1;
+                break;
+            }
+
+            _approach_enter(approach, PET_APPROACH_MOUTH);
+            return true;
+        case PET_APPROACH_MOUTH:
+            if (approach->phase_ticks >= APPROACH_MOUTH_TICKS) _approach_enter(approach, PET_APPROACH_SETTLING);
+            break;
+        case PET_APPROACH_SETTLING:
+            if (approach->phase_ticks >= APPROACH_SETTLE_TICKS) approach->running = false;
+            break;
     }
 
-    if (approach->prop_position > APPROACH_LANDING_POSITION) {
-        approach->prop_position--;
-        return false;
-    }
-
-    approach->hold_ticks = APPROACH_HOLD_TICKS;
-
-    return true;
+    return false;
 }
 
-void pet_approach_draw(const pet_approach_t *approach, const char *prop, const char *reaction) {
+static const char *_approach_sprite(const pet_approach_t *approach) {
+    const pet_species_t *species = _species();
+
+    switch (approach->phase) {
+        case PET_APPROACH_WALKING:
+            return pet_sprite(pet_mood(), approach->phase_ticks);
+        case PET_APPROACH_INCOMING:
+            return _prop_distance(approach) <= APPROACH_SWELL_DISTANCE ? species->eating_swell : species->eating_ball;
+        case PET_APPROACH_MOUTH:
+            return species->eating_mouth;
+        default:
+            return species->eating_ball;
+    }
+}
+
+void pet_approach_draw(const pet_approach_t *approach, const char *prop) {
     char row[PET_ROW_LENGTH + 1];
 
     pet_row_clear(row);
-    pet_row_place(row, APPROACH_PET_POSITION, reaction);
+    pet_row_place(row, approach->pet_position, _approach_sprite(approach));
 
-    // Once the prop has landed the pet is left to react to it on its own.
-    if (approach->hold_ticks == 0) pet_row_place(row, approach->prop_position, prop);
+    // The food is only on screen while it is travelling; after that it is eaten.
+    if (approach->phase == PET_APPROACH_INCOMING) pet_row_place(row, approach->prop_position, prop);
 
     watch_display_text(WATCH_POSITION_BOTTOM, row);
-}
-
-const char *pet_eating_reaction(const pet_approach_t *approach, uint8_t frame) {
-    if (approach->hold_ticks > 0) return _species()->eating_frames[PET_EATING_FRAMES - approach->hold_ticks];
-
-    return pet_sprite(pet_mood(), frame);
 }
 
 void pet_feed(uint8_t nutrition) {
@@ -506,6 +625,17 @@ void pet_feed(uint8_t nutrition) {
 
     _pet.hunger = _raise(_pet.hunger, nutrition);
     movement_play_sequence(_tune_eat, BUZZER_PRIORITY_BUTTON);
+    _save();
+}
+
+/* A performance is a bigger ask than a poke or a pat - it takes a trip to its own
+ * face and a whole tune played out - so it earns more happiness than those do.
+ */
+void pet_sing(void) {
+    _settle();
+    if (_pet.dead) return;
+
+    _pet.happiness = _raise(_pet.happiness, SING_HAPPINESS_GAIN);
     _save();
 }
 
@@ -539,11 +669,16 @@ static const pet_interact_effect_t INTERACT_EFFECTS[PET_INTERACT_COUNT] = {
     [PET_INTERACT_WAVE] = _wave,
 };
 
+/* Prodding it awake is the only way to feed or play with it after bedtime, and it
+ * works, but it holds the grudge for the lost sleep.
+ */
 void pet_disturb(void) {
     _settle();
     if (_pet.dead || !_pet.asleep) return;
 
     _pet.happiness = _lower(_pet.happiness, DISTURB_HAPPINESS_COST);
+    _pet.awake_until_s = _pet.settled_at_s + (NUDGED_AWAKE_MIN * SECONDS_PER_MINUTE);
+    _pet.asleep = false;
     _save();
 }
 
@@ -551,7 +686,7 @@ pet_interact_kind_t pet_interact(void) {
     _settle();
     if (_pet.dead) return PET_INTERACT_COUNT;
 
-    // Waking it up is not the fun kind of attention, so it gets the scold instead.
+    // The tap that wakes it is spent on the waking, so the fun starts on the next one.
     if (_pet.asleep) {
         pet_disturb();
         return PET_INTERACT_COUNT;

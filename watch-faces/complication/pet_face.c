@@ -27,12 +27,18 @@
 #include <string.h>
 #include "pet_face.h"
 #include "watch_common_display.h"
+#include "watch_utility.h"
 
 // Two ticks per second is enough for a creature that ambles rather than runs.
 static const uint8_t TICK_FREQUENCY_HZ = 2;
 
 static const uint8_t WANDER_CHOICES = 3;
-static const uint8_t MAX_POSITION = PET_ROW_LENGTH - PET_SPRITE_WIDTH;
+
+// Roughly one amble in eight is a hop between the two strips rather than a step along one.
+static const uint8_t HOP_ODDS = 8;
+
+// Two ticks read as a hop: low in the digit, then stretched tall, before it lands on the strip above.
+static const uint8_t RISE_TICKS = 2;
 
 // The off frame is a blink, so it should be a flicker rather than half the pet's life.
 static const uint8_t BLINK_EVERY_N_TICKS = 8;
@@ -40,11 +46,11 @@ static const uint8_t BLINK_EVERY_N_TICKS = 8;
 // One stat per second is slow enough to read while the light button is held down.
 static const uint8_t TICKS_PER_STAT = 2;
 
-// The top right holds two digits, so longer lived pets and later generations wrap.
+// The top right holds two digits, so later generations wrap.
 static const uint16_t TOP_RIGHT_WRAP = 100;
 
-// The bottom row spends three characters on the label, leaving three for the age.
-static const uint16_t GRAVE_AGE_WRAP = 1000;
+// The bottom row spends three characters on the label, leaving three for the number.
+static const uint16_t STAT_WRAP = 1000;
 
 typedef enum {
     PET_STAT_HUNGER,
@@ -54,16 +60,14 @@ typedef enum {
     PET_STAT_COUNT,
 } pet_stat_t;
 
-typedef struct {
-    const char *label;
-    const char *fallback;
-} pet_stat_label_t;
-
-static const pet_stat_label_t STAT_LABELS[PET_STAT_COUNT] = {
-    [PET_STAT_HUNGER]    = { "HUN", "HU" },
-    [PET_STAT_HAPPINESS] = { "HAP", "HA" },
-    [PET_STAT_HEALTH]    = { "HEA", "HE" },
-    [PET_STAT_AGE]       = { "AGE", "AG" },
+/* Three characters each, because the stats are read off the big digits rather than
+ * squeezed into the top left, and every glyph here draws in the bottom row.
+ */
+static const char *STAT_LABELS[PET_STAT_COUNT] = {
+    [PET_STAT_HUNGER]    = "HUN",
+    [PET_STAT_HAPPINESS] = "HAP",
+    [PET_STAT_HEALTH]    = "HEA",
+    [PET_STAT_AGE]       = "AGE",
 };
 
 static uint16_t _stat_value(const pet_t *pet, pet_stat_t stat) {
@@ -79,14 +83,30 @@ static uint16_t _stat_value(const pet_t *pet, pet_stat_t stat) {
     }
 }
 
-// Three ways to move, so the pet drifts about rather than marching wall to wall.
-static uint8_t _wander(uint8_t position) {
+static uint8_t _strip_length(bool on_top_row) {
+    return on_top_row ? pet_top_row_length() : PET_ROW_LENGTH;
+}
+
+/* Three ways to move, so the pet drifts about rather than marching wall to wall, plus
+ * the occasional hop up to the strip where the name used to be.
+ */
+static void _wander(pet_face_state_t *state) {
+    uint8_t position = pet_position();
+    uint8_t length = _strip_length(state->on_top_row);
+
+    if (rand() % HOP_ODDS == 0) {
+        state->on_top_row = !state->on_top_row;
+        length = _strip_length(state->on_top_row);
+
+        // The upper strip is the shorter of the two, so coming up can mean shuffling in.
+        if (position + PET_SPRITE_WIDTH > length) pet_set_position(length - PET_SPRITE_WIDTH);
+        return;
+    }
+
     uint8_t step = rand() % WANDER_CHOICES;
 
-    if (step == 0 && position > 0) return position - 1;
-    if (step == 2 && position < MAX_POSITION) return position + 1;
-
-    return position;
+    if (step == 0 && position > 0) pet_set_position(position - 1);
+    else if (step == 2 && position + PET_SPRITE_WIDTH < length) pet_set_position(position + 1);
 }
 
 static uint8_t _frame_for(pet_mood_t mood, uint8_t tick) {
@@ -112,17 +132,23 @@ static const char *_current_sprite(pet_face_state_t *state, pet_mood_t mood) {
     return pet_sprite(mood, _frame_for(mood, state->tick));
 }
 
+/* No label here: the creature is the screen, and the strip the name would sit on is
+ * somewhere for it to go.
+ */
 static void _display_pet(pet_face_state_t *state, pet_mood_t mood) {
+    char top[PET_TOP_ROW_LENGTH + 1];
     char row[PET_ROW_LENGTH + 1];
-    char buf[4];
+    const char *sprite = _current_sprite(state, mood);
 
     watch_clear_colon();
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "PET", "PE");
-    snprintf(buf, sizeof(buf), "%2d", pet_age_days() % TOP_RIGHT_WRAP);
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-
+    pet_top_clear(top);
     pet_row_clear(row);
-    pet_row_place(row, state->position, _current_sprite(state, mood));
+
+    if (state->on_top_row) pet_top_place(top, pet_position(), sprite);
+    else pet_row_place(row, pet_position(), sprite);
+
+    pet_top_draw(top);
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
     watch_display_text(WATCH_POSITION_BOTTOM, row);
 }
 
@@ -134,30 +160,46 @@ static void _display_grave(void) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "RIP", "RP");
     snprintf(buf, sizeof(buf), "%2d", pet->generation % TOP_RIGHT_WRAP);
     watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-    snprintf(buf, sizeof(buf), "AGE%3d", pet_age_days() % GRAVE_AGE_WRAP);
+    snprintf(buf, sizeof(buf), "AGE%3d", pet_age_days() % STAT_WRAP);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
-// The peek is there to read the time, so it ignores the 12h clock mode setting.
+static const char MONTHS[12][4] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
+static const char SHORT_MONTHS[12][3] = {"JA", "FE", "MR", "AP", "MY", "JN", "JL", "AU", "SE", "OC", "NO", "DE"};
+
+/* Laid out like the clock face, with the weekday slot swapping to the month every other
+ * second so the full date fits. The peek is there to read the time, so it ignores the
+ * 12h clock mode setting.
+ */
 static void _display_time(void) {
     watch_date_time_t now = movement_get_local_date_time();
     char buf[8];
 
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "NOW", "NW");
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+    if (now.unit.second % 2 == 0) {
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, watch_utility_get_long_weekday(now), watch_utility_get_weekday(now));
+    } else {
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, MONTHS[now.unit.month - 1], SHORT_MONTHS[now.unit.month - 1]);
+    }
+    snprintf(buf, sizeof(buf), "%2d", now.unit.day);
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
     snprintf(buf, sizeof(buf), "%02d%02d%02d", now.unit.hour, now.unit.minute, now.unit.second);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
     watch_set_colon();
 }
 
+/* Label and number both go in the big digits, where three cramped characters in the
+ * top left were the difference between reading HEALTH and guessing at it.
+ */
 static void _display_stats(pet_face_state_t *state) {
     const pet_t *pet = pet_get();
-    char buf[8];
+    char top[PET_TOP_ROW_LENGTH + 1];
+    char buf[PET_ROW_LENGTH + 1];
 
     watch_clear_colon();
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, STAT_LABELS[state->stat_page].label, STAT_LABELS[state->stat_page].fallback);
+    pet_top_clear(top);
+    pet_top_draw(top);
     watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
-    snprintf(buf, sizeof(buf), "%6d", _stat_value(pet, state->stat_page));
+    snprintf(buf, sizeof(buf), "%s%3d", STAT_LABELS[state->stat_page], _stat_value(pet, state->stat_page) % STAT_WRAP);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
@@ -195,7 +237,7 @@ static void _advance(pet_face_state_t *state, pet_mood_t mood) {
     }
 
     // A sleeping, sick or dying pet stays put; only a comfortable one bothers moving.
-    if (mood == PET_MOOD_HAPPY || mood == PET_MOOD_HUNGRY) state->position = _wander(state->position);
+    if (mood == PET_MOOD_HAPPY || mood == PET_MOOD_HUNGRY) _wander(state);
 }
 
 static void _handle_hold(pet_face_state_t *state) {
@@ -230,6 +272,14 @@ void pet_face_activate(void *context) {
     state->peeking = false;
     state->showing_stats = false;
     state->reaction_ticks_left = 0;
+
+    /* Feeding walks the pet along the bottom row, which is wider than the upper strip,
+     * so it can come back from the food face standing further out than it can stand up
+     * here. Bring it back in rather than clipping it off the edge of the world.
+     */
+    uint8_t length = _strip_length(state->on_top_row);
+    if (pet_position() + PET_SPRITE_WIDTH > length) pet_set_position(length - PET_SPRITE_WIDTH);
+
     movement_request_tick_frequency(TICK_FREQUENCY_HZ);
 }
 

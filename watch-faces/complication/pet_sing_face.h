@@ -22,40 +22,41 @@
  * SOFTWARE.
  */
 
-#ifndef PET_FOOD_FACE_H_
-#define PET_FOOD_FACE_H_
+#ifndef PET_SING_FACE_H_
+#define PET_SING_FACE_H_
 
 /*
- * PET FOOD face
+ * PET SING face
  *
- * The pet's dinner menu. The top right shows how hungry it currently is, so you
- * can see whether a snack will do or it wants the cake.
+ * A jukebox for the pet: every signal tune in the firmware is fair game, so what
+ * plays is whatever the hourly chime could ever be, not a tune written just for
+ * this face. SING gives way to the pet itself, planted on a fresh random spot on
+ * the row and singing along with its mouth on the actual notes, then returns once
+ * the tune stops.
  *
- * Feeding rolls the food across the row into the pet, which eats it.
- *
- * ALARM tap:   next item on the menu
- * ALARM hold:  feed it the item on screen, getting it out of bed if it is asleep
+ * ALARM tap:   sing something at random
  */
 
 #include "movement.h"
 #include "pet.h"
 
 typedef struct {
-    uint8_t selection;
-    pet_approach_t serving;
-} pet_food_face_state_t;
+    bool singing;            ///< true from the ALARM press until the tune finishes
+    uint8_t tune;            ///< which signal_tune_index_t is currently playing
+    uint16_t elapsed_ticks;  ///< 64Hz ticks into that tune, the same clock the buzzer itself reads on
+} pet_sing_face_state_t;
 
-void pet_food_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void pet_food_face_activate(void *context);
-bool pet_food_face_loop(movement_event_t event, void *context);
-void pet_food_face_resign(void *context);
+void pet_sing_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void pet_sing_face_activate(void *context);
+bool pet_sing_face_loop(movement_event_t event, void *context);
+void pet_sing_face_resign(void *context);
 
-#define pet_food_face ((const watch_face_t){ \
-    pet_food_face_setup, \
-    pet_food_face_activate, \
-    pet_food_face_loop, \
-    pet_food_face_resign, \
+#define pet_sing_face ((const watch_face_t){ \
+    pet_sing_face_setup, \
+    pet_sing_face_activate, \
+    pet_sing_face_loop, \
+    pet_sing_face_resign, \
     NULL, \
 })
 
-#endif // PET_FOOD_FACE_H_
+#endif // PET_SING_FACE_H_

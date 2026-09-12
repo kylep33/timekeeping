@@ -43,6 +43,12 @@ typedef enum {
     SIGNAL_TUNE_HARRY_POTTER_LONG,
     SIGNAL_TUNE_JURASSIC_PARK,
     SIGNAL_TUNE_EVANGELION,
+    SIGNAL_TUNE_AXEL_F,
+    SIGNAL_TUNE_INDIANA_JONES,
+    SIGNAL_TUNE_SIMPSONS,
+    SIGNAL_TUNE_PAC_MAN,
+    SIGNAL_TUNE_ALL_STAR,
+    SIGNAL_TUNE_IMPERIAL_MARCH,
     SIGNAL_TUNE_COUNT,
 } signal_tune_index_t;
 
@@ -378,9 +384,15 @@ void movement_request_wake(void);
 void movement_play_note(watch_buzzer_note_t note, uint16_t duration_ms);
 void movement_play_signal(void);
 void movement_set_signal_tune(signal_tune_index_t tune);
+// Plays a tune once without adopting it as the mode's hourly chime, for faces that just want a song.
+void movement_play_signal_tune(signal_tune_index_t tune);
+// The raw [note, duration, ...] pairs behind a tune, for faces that want to track its beat rather than just play it.
+const int8_t *movement_get_signal_tune(signal_tune_index_t tune);
 void movement_play_alarm(void);
 void movement_play_alarm_beeps(uint8_t rounds, watch_buzzer_note_t alarm_note);
 void movement_play_sequence(int8_t *note_sequence, movement_buzzer_priority_t priority);
+// True for as long as a played note or sequence is still sounding, for faces that animate along with one.
+bool movement_is_buzzing(void);
 
 uint8_t movement_claim_backup_register(void);
 

@@ -622,6 +622,10 @@ void cb_buzzer_stop(void) {
     movement_volatile_state.pending_sequence_priority = 0;
 }
 
+bool movement_is_buzzing(void) {
+    return movement_volatile_state.is_buzzing;
+}
+
 void movement_play_note(watch_buzzer_note_t note, uint16_t duration_ms) {
     static int8_t single_note_sequence[3];
 
@@ -646,6 +650,20 @@ void movement_set_signal_tune(signal_tune_index_t tune) {
 
 void movement_play_signal(void) {
     movement_play_sequence(signal_tunes[_signal_tune], BUZZER_PRIORITY_SIGNAL);
+}
+
+void movement_play_signal_tune(signal_tune_index_t tune) {
+    if (tune >= SIGNAL_TUNE_COUNT) {
+        printf("Signal tune %d out of range, not playing anything. Use a signal_tune_index_t value.\r\n", tune);
+        return;
+    }
+    movement_play_sequence(signal_tunes[tune], BUZZER_PRIORITY_BUTTON);
+}
+
+const int8_t *movement_get_signal_tune(signal_tune_index_t tune) {
+    if (tune >= SIGNAL_TUNE_COUNT) return NULL;
+
+    return signal_tunes[tune];
 }
 
 void movement_play_alarm(void) {

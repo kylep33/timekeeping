@@ -34,8 +34,7 @@ typedef enum {
 } RunnerJumpState;
 
 typedef enum {
-    SCREEN_TITLE = 0,
-    SCREEN_SCORE,
+    SCREEN_SCORE = 0,
     SCREEN_PLAYING,
     SCREEN_LOSE,
     SCREEN_TIME,
@@ -59,7 +58,7 @@ typedef enum {
 #define JUMP_FRAMES_EASY 3 // Wait this many frames on difficulties at or below EASY before coming down from the jump button pressed
 #define MIN_ZEROES 4  // At minimum, we'll have this many spaces between obstacles
 #define MIN_ZEROES_HARD 3 // At minimum, we'll have this many spaces between obstacles on hard mode
-#define MAX_HI_SCORE 9999  // Max hi score to store and display on the title screen.
+#define MAX_HI_SCORE 9999  // Max hi score to store and display on the score screen.
 #define MAX_DISP_SCORE 39  // The top-right digits can't properly display above 39
 #define JUMP_FRAMES_FUEL 30  // The max fuel that fuel that the fuel mode game will hold
 #define JUMP_FRAMES_FUEL_RECHARGE 3 // How much fuel each frame on the ground adds
@@ -339,14 +338,6 @@ static void disable_tap_control(endless_runner_state_t *state) {
     }
 }
 
-static void display_title(endless_runner_state_t *state) {
-    game_state.curr_screen = SCREEN_TITLE;
-    watch_clear_colon();
-    watch_display_text_with_fallback(WATCH_POSITION_TOP, "ENdLS", "ER  ");
-    watch_display_text(WATCH_POSITION_BOTTOM, "RUNNER");
-    display_sound_indicator(state -> soundOn);
-}
-
 static void display_score_screen(endless_runner_state_t *state) {
     uint16_t hi_score = state -> hi_score;
     uint8_t difficulty = state -> difficulty;
@@ -582,12 +573,11 @@ bool endless_runner_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
             disable_tap_control(state);
             check_and_reset_hi_score(state);
-            display_title(state);
+            display_score_screen(state);
             break;
         case EVENT_TICK:
             switch (game_state.curr_screen)
             {
-            case SCREEN_TITLE:
             case SCREEN_SCORE:
             case SCREEN_LOSE:
             case SCREEN_TIME:
@@ -604,9 +594,6 @@ bool endless_runner_face_loop(movement_event_t event, void *context) {
                     enable_tap_control(state);
                     begin_playing(state);
                     break;
-                case SCREEN_TITLE:
-                    enable_tap_control(state);
-                    // fall through
                 case SCREEN_TIME:
                 case SCREEN_LOSE:
                     watch_clear_display();
@@ -639,7 +626,7 @@ bool endless_runner_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_ALARM_LONG_PRESS:
-            if (game_state.curr_screen == SCREEN_TITLE || game_state.curr_screen == SCREEN_SCORE)
+            if (game_state.curr_screen == SCREEN_SCORE)
                 toggle_sound(state);
             break;
         case EVENT_TIMEOUT:

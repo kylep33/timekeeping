@@ -28,8 +28,8 @@
 /*
  * PET
  *
- * The creature behind the pet home, food and play faces. It owns the one copy of
- * the pet, so every face is a view onto the same animal.
+ * The creature behind the pet home, food, play and sing faces. It owns the one copy
+ * of the pet, so every face is a view onto the same animal.
  *
  * Needs drain against the wall clock rather than a tick count, so the pet keeps
  * living while the watch sleeps or shows another face. Nothing is stored that can
@@ -41,8 +41,12 @@
 
 #define PET_STAT_MAX 100
 
-// The bottom row is the pet's whole world; it wanders the width of it.
+/* The pet's world is two strips: the six character bottom row, and the top left,
+ * which is three cells on the custom LCD and two on the classic one. The home face
+ * spends no space on a label so the pet has the upper strip to hop up to.
+ */
 #define PET_ROW_LENGTH 6
+#define PET_TOP_ROW_LENGTH 3
 #define PET_SPRITE_WIDTH 1
 #define PET_ANIMATION_FRAMES 2
 
@@ -81,6 +85,7 @@ typedef struct {
     uint32_t settled_at_s;          ///< wall clock the needs were last brought up to date
     uint32_t hatched_at_s;
     uint32_t critical_since_s;      ///< zero unless health has bottomed out
+    uint32_t awake_until_s;         ///< zero unless it was prodded awake after bedtime
     uint32_t hunger_debt_s;         ///< time banked toward the next whole point of drain
     uint32_t happiness_debt_s;
     uint32_t health_debt_s;
@@ -109,34 +114,68 @@ uint16_t pet_age_days(void);
 /// @brief The current species' sprite for a mood, alternating with frame.
 const char *pet_sprite(pet_mood_t mood, uint8_t frame);
 
+/// @brief The mid-hop frame: low in the digit on the way up, or stretched tall just before landing.
+const char *pet_rise_sprite(bool stretched);
+
+/* Where the pet is standing, as a column shared by every face, so walking off one
+ * screen and onto another leaves it where you left it. Which strip it is on is the
+ * home face's business, since nowhere else draws the upper one.
+ */
+uint8_t pet_position(void);
+void pet_set_position(uint8_t position);
+
+/// @brief How many cells the upper strip has on the LCD actually fitted.
+uint8_t pet_top_row_length(void);
+
 /// @brief Blanks a bottom row buffer, which must hold PET_ROW_LENGTH + 1 characters.
 void pet_row_clear(char *row);
 
 /// @brief Draws a sprite into a blanked row, clipping anything past the edge.
 void pet_row_place(char *row, uint8_t position, const char *sprite);
 
+/// @brief Blanks an upper strip buffer, which must hold PET_TOP_ROW_LENGTH + 1 characters.
+void pet_top_clear(char *row);
+
+/// @brief Draws a sprite into a blanked upper strip, clipping anything past the edge.
+void pet_top_place(char *row, uint8_t position, const char *sprite);
+
+/// @brief Puts a prepared upper strip on screen, using whatever cells the LCD has.
+void pet_top_draw(const char *row);
+
+/// @brief The stages of a feeding, in the order they play.
+typedef enum {
+    PET_APPROACH_WALKING,   ///< crossing to its own side of the row, before the food shows up
+    PET_APPROACH_INCOMING,  ///< food rolling in, the pet swelling as it gets close
+    PET_APPROACH_MOUTH,     ///< open, taking the food
+    PET_APPROACH_SETTLING,  ///< shrinking back down now the food is gone
+} pet_approach_phase_t;
+
 /* A prop crossing the row into the pet, which is what feeding looks like. The pet
- * stands aside so the prop has room to arrive.
+ * walks to whichever end it is already nearest and waits there, so the prop always
+ * comes in from the far end with the width of the row to travel.
  */
 typedef struct {
+    uint8_t pet_position;
     uint8_t prop_position;
-    uint8_t hold_ticks;     ///< counts down while the pet reacts, after the prop lands
+    uint8_t phase_ticks;
+    pet_approach_phase_t phase;
+    bool prop_from_left;
     bool running;
 } pet_approach_t;
 
-void pet_approach_start(pet_approach_t *approach);
+/// @brief Starts a feeding, with the pet setting off from wherever it was standing.
+void pet_approach_start(pet_approach_t *approach, uint8_t pet_position);
 
-/// @brief Steps the animation on. Returns true on the single tick the prop lands.
+/// @brief Steps the animation on. Returns true on the single tick the food goes down.
 bool pet_approach_advance(pet_approach_t *approach);
 
-/// @brief Draws the prop until it lands, and the given reaction sprite for the pet.
-void pet_approach_draw(const pet_approach_t *approach, const char *prop, const char *reaction);
-
-/// @brief The pet's reaction to a landed approach: eating while it is chewing, its
-///        ordinary mood sprite once the plate is clear.
-const char *pet_eating_reaction(const pet_approach_t *approach, uint8_t frame);
+/// @brief Draws the pet, and the prop while it is still on its way over.
+void pet_approach_draw(const pet_approach_t *approach, const char *prop);
 
 void pet_feed(uint8_t nutrition);
+
+/// @brief Raises happiness for a performance. Call once when a song actually starts.
+void pet_sing(void);
 
 /// @brief Nudges the awake pet with a random interaction, or scolds you for waking it.
 /// @return which interaction played, or PET_INTERACT_COUNT if the pet did nothing.
@@ -145,7 +184,10 @@ pet_interact_kind_t pet_interact(void);
 /// @brief The current species' reaction sprite for an interaction, alternating with frame.
 const char *pet_interact_sprite(pet_interact_kind_t kind, uint8_t frame);
 
-/// @brief Charges the pet's mood for a button press that cut its sleep short.
+/// @brief The current species' singing mouth: shut, then hinged open, alternating with frame.
+const char *pet_sing_sprite(uint8_t frame);
+
+/// @brief Prods the sleeping pet awake for a few minutes, at the cost of its mood.
 void pet_disturb(void);
 
 /// @brief True when the pet has something to shout about from the background.

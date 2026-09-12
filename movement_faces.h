@@ -89,5 +89,6 @@
 #include "pet_face.h"
 #include "pet_food_face.h"
 #include "pet_play_face.h"
+#include "pet_sing_face.h"
 #include "mode_select_face.h"
 // New includes go above this line.
