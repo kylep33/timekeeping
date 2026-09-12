@@ -2,10 +2,12 @@
 """Render Movement signal tunes to WAV files so you can audition them without
 building firmware.
 
-Every tune in movement_custom_signal_tunes.h is guarded by its own #ifdef and
-they all declare the same symbol (signal_tune[]), so a given firmware build can
-only contain one. Rather than doing a clean rebuild per tune just to hear it,
-this reimplements the firmware's sequence player on the host.
+Every tune in movement_custom_signal_tunes.h is its own named array (e.g.
+signal_tune_zelda_secret[]), and a lookup table at the bottom of that file
+(signal_tunes[SIGNAL_TUNE_COUNT]) maps each SIGNAL_TUNE_* enum value to its
+array, so a build carries all of them at once. Rather than doing a clean
+rebuild per tune just to hear it, this reimplements the firmware's sequence
+player on the host.
 
 The playback semantics mirror cb_watch_buzzer_seq() in
 watch-library/hardware/watch/watch_tcc.c, which is driven by a 64 Hz timer, so
@@ -74,32 +76,60 @@ def parse_notes(path):
     return notes
 
 
-def parse_tunes(path, notes):
-    """Map tune name -> flat [value, duration, ...] list, as the firmware sees it.
+def _parse_array_body(body, notes, label):
+    """Turn a brace-delimited array body into a flat [value, duration, ...] list.
 
     Note names become their enum index so that the negative repeat markers stay
     distinguishable from real notes.
     """
+    body = re.sub(r"//.*?$|/\*.*?\*/", "", body, flags=re.S | re.M)
+    seq = []
+    for token in (t.strip() for t in body.split(",")):
+        if not token:
+            continue
+        if token in notes:
+            seq.append(notes[token][0])
+        else:
+            try:
+                seq.append(int(token, 0))
+            except ValueError:
+                sys.exit(f"{label}: unrecognized token {token!r}")
+    return seq
+
+
+def parse_tunes(path, notes):
+    """Map SIGNAL_TUNE_* suffix -> flat [value, duration, ...] list.
+
+    Each tune is its own `static int8_t signal_tune_whatever[] = {...};` array;
+    a `signal_tunes[SIGNAL_TUNE_COUNT] = { [SIGNAL_TUNE_X] = signal_tune_x, ... }`
+    table at the bottom names which array belongs to which enum value. Parsing
+    happens in that same order: arrays first, then the table that picks among
+    them, so a renamed or reordered array is still found by name rather than
+    by position.
+    """
     text = path.read_text()
-    tunes = {}
-    for name, body in re.findall(
-        r"#ifdef SIGNAL_TUNE_(\w+)\s*\n\s*int8_t signal_tune\[\]\s*=\s*\{(.*?)\};",
-        text,
-        re.S,
+
+    arrays = {}
+    for varname, body in re.findall(
+        r"static int8_t (signal_tune_\w+)\[\]\s*=\s*\{(.*?)\};", text, re.S
     ):
-        body = re.sub(r"//.*?$|/\*.*?\*/", "", body, flags=re.S | re.M)
-        seq = []
-        for token in (t.strip() for t in body.split(",")):
-            if not token:
-                continue
-            if token in notes:
-                seq.append(notes[token][0])
-            else:
-                try:
-                    seq.append(int(token, 0))
-                except ValueError:
-                    sys.exit(f"{name}: unrecognized token {token!r}")
-        tunes[name] = seq
+        arrays[varname] = _parse_array_body(body, notes, varname)
+    if not arrays:
+        sys.exit(f"parsed zero tune arrays from {path}")
+
+    table = re.search(
+        r"signal_tunes\[SIGNAL_TUNE_COUNT\]\s*=\s*\{(.*?)\};", text, re.S
+    )
+    if not table:
+        sys.exit(f"could not find the signal_tunes[SIGNAL_TUNE_COUNT] table in {path}")
+
+    tunes = {}
+    for suffix, varname in re.findall(
+        r"\[SIGNAL_TUNE_(\w+)\]\s*=\s*(signal_tune_\w+)\s*,", table.group(1)
+    ):
+        if varname not in arrays:
+            sys.exit(f"SIGNAL_TUNE_{suffix} points at {varname}, which was never defined")
+        tunes[suffix] = arrays[varname]
     if not tunes:
         sys.exit(f"parsed zero tunes from {path}")
     return tunes

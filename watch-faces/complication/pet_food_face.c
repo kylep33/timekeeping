@@ -56,7 +56,7 @@ static void _redraw(pet_food_face_state_t *state) {
     watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
 
     if (state->serving.running) {
-        pet_approach_draw(&state->serving, FOODS[state->selection].sprite, pet_eating_reaction(&state->serving, state->tick));
+        pet_approach_draw(&state->serving, FOODS[state->selection].sprite);
     } else {
         watch_display_text(WATCH_POSITION_BOTTOM, FOODS[state->selection].name);
     }
@@ -67,13 +67,10 @@ static void _select(pet_food_face_state_t *state) {
 
     if (pet->dead) return;
 
-    // Waking it up to eat is still waking it up, so it gets its grumble in first.
-    if (pet->asleep) {
-        pet_disturb();
-        return;
-    }
+    // A midnight snack means getting it out of bed, which it charges you for.
+    if (pet->asleep) pet_disturb();
 
-    pet_approach_start(&state->serving);
+    pet_approach_start(&state->serving, pet_position());
 }
 
 void pet_food_face_setup(uint8_t watch_face_index, void ** context_ptr) {
@@ -100,7 +97,6 @@ bool pet_food_face_loop(movement_event_t event, void *context) {
             _redraw(state);
             break;
         case EVENT_TICK:
-            state->tick++;
             if (pet_approach_advance(&state->serving)) pet_feed(FOODS[state->selection].nutrition);
             _redraw(state);
             break;

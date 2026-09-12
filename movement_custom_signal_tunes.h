@@ -236,6 +236,322 @@ static int8_t signal_tune_evangelion[] = {
     0,
 };
 
+/* Unlike the rest of this file, the tunes below are transcribed from a cited
+ * source rather than from memory: an RTTTL ringtone, a published Arduino
+ * melody sourced from a MuseScore transcription, or a note tab, with the
+ * source named in each comment. Durations are converted from that source's
+ * own tempo into ticks (real ms / 15.625), so the pacing is the song's actual
+ * pacing rather than a guess - split roughly 85/15 into note-on and a rest,
+ * so repeated notes at the same pitch are still heard as separate hits.
+ */
+
+// Nokia RTTTL "CrazyFrog" (o=6, b=125): the full riff, one time through.
+static int8_t signal_tune_axel_f[] = {
+    BUZZER_NOTE_F5, 27,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_G5SHARP_A5FLAT, 20,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_F5, 7,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_F5, 7,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_A5SHARP_B5FLAT, 13,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_F5, 13,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_D5SHARP_E5FLAT, 13,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_F5, 27,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_C6, 20,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_F5, 7,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_F5, 7,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_C6SHARP_D6FLAT, 13,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_C6, 13,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_G5SHARP_A5FLAT, 13,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_F5, 13,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_C6, 13,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_F6, 13,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_F5, 7,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_D5SHARP_E5FLAT, 7,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_D5SHARP_E5FLAT, 13,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_C5, 13,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_G5, 13,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_F5, 27,
+    0
+};
+
+/* Read from the user's "Raiders March" sheet music: cut time, march tempo
+ * 120 - the half note carries the beat, so a whole note is 1000ms at strict
+ * tempo. Eased back to 1600ms so the fast pickup notes stay audible instead
+ * of blurring. Opens E5-F5-G5 into a held C6, then D5-E5 into a held F5 -
+ * then the next phrase: the same climb-into-a-hold shape repeated a fifth
+ * higher (G5-A5-B5 into a held F6), followed by a short walking line
+ * (A5-B5-C6-D6) up to a final E6.
+ */
+static int8_t signal_tune_indiana_jones[] = {
+    BUZZER_NOTE_E5, 16,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_F5, 5,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_G5, 3,
+    BUZZER_NOTE_REST, 10,
+    BUZZER_NOTE_C6, 24,
+    BUZZER_NOTE_REST, 5,
+    BUZZER_NOTE_D5, 16,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_E5, 5,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_F5, 38,
+    BUZZER_NOTE_REST, 6,
+
+    BUZZER_NOTE_G5, 16,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_A5, 5,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_B5, 3,
+    BUZZER_NOTE_REST, 10,
+    BUZZER_NOTE_F6, 24,
+    BUZZER_NOTE_REST, 5,
+    BUZZER_NOTE_A5, 16,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_B5, 5,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_C6, 22,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_D6, 22,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_E6, 20,
+    0
+};
+
+// RTTTL "Simpsons" (d=4, o=5, b=160): the full opening stanza, hook and answer.
+static int8_t signal_tune_simpsons[] = {
+    BUZZER_NOTE_C6, 31,
+    BUZZER_NOTE_REST, 5,
+    BUZZER_NOTE_E6, 20,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_F6SHARP_G6FLAT, 20,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_A6, 10,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_G6, 31,
+    BUZZER_NOTE_REST, 5,
+    BUZZER_NOTE_E6, 20,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_C6, 20,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_A5, 10,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 10,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 10,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 10,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_G5, 48,
+    0
+};
+
+/* robsoncouto/arduino-songs pacman.ino (tempo 105, sourced from a MuseScore
+ * transcription): both phrases of the "waka waka" intro, the whole thing.
+ * The second phrase's closing run is dropped an octave from the source - at
+ * the written pitch it was shriller than the rest of the tune.
+ */
+static int8_t signal_tune_pac_man[] = {
+    BUZZER_NOTE_B4, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_B5, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_D5SHARP_E5FLAT, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_B5, 4,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 12,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_D5SHARP_E5FLAT, 15,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_C5, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_C6, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_G6, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_E6, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_C6, 4,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_G6, 12,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_E6, 15,
+    BUZZER_NOTE_REST, 3,
+
+    BUZZER_NOTE_B4, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_B5, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_D5SHARP_E5FLAT, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_B5, 4,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 12,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_D5SHARP_E5FLAT, 15,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_D5SHARP_E5FLAT, 4,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_E4, 4,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_F4, 4,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_F4, 4,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_F4SHARP_G4FLAT, 4,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_G4, 4,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_G4, 4,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_G4SHARP_A4FLAT, 4,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_A4, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_B4, 15,
+    0
+};
+
+/* noobnotes.net letter notes for "Somebody once told me the world is gonna
+ * roll me / I ain't the sharpest tool in the shed": the actual melody (a
+ * rising fourth, not a repeated note), through the end of the first stanza.
+ */
+static int8_t signal_tune_all_star[] = {
+    BUZZER_NOTE_G4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_D5, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_B4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_B4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_A4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_G4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_G4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_C5, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_B4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_B4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_A4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_A4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_G4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_C5, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_B4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_B4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_A4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_A4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_G4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_A4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_E4, 12,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_D4, 26,
+    0
+};
+
+/* robsoncouto/arduino-songs imperialmarch.ino (tempo 120, sourced from a
+ * MuseScore tenor-sax transcription): not the famous opening call, but the
+ * syncopated turn right after it ("A5, A4-A4, A5, G#5-G5, D#5-D5-D#5...")
+ * through to its cadence - real tempo, no extra scaling needed since nothing
+ * in this stretch is a long held note.
+ */
+static int8_t signal_tune_imperial_march[] = {
+    BUZZER_NOTE_A5, 28,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_A4, 21,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_A4, 6,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A5, 28,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_G5SHARP_A5FLAT, 21,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_G5, 6,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_D5SHARP_E5FLAT, 6,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_D5, 6,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_D5SHARP_E5FLAT, 14,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_REST, 16,
+    BUZZER_NOTE_A4, 14,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_D5SHARP_E5FLAT, 28,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_D5, 21,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_C5SHARP_D5FLAT, 6,
+    BUZZER_NOTE_REST, 2,
+
+    BUZZER_NOTE_C5, 6,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_B4, 6,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_C5, 6,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_REST, 16,
+    BUZZER_NOTE_F4, 14,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_G4SHARP_A4FLAT, 28,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_F4, 21,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_A4, 10,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_C5, 28,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_A4, 21,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_C5, 6,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_E5, 64,
+    0
+};
+
 static int8_t *const signal_tunes[SIGNAL_TUNE_COUNT] = {
     [SIGNAL_TUNE_DEFAULT] = signal_tune_default,
     [SIGNAL_TUNE_ZELDA_SECRET] = signal_tune_zelda_secret,
@@ -248,4 +564,10 @@ static int8_t *const signal_tunes[SIGNAL_TUNE_COUNT] = {
     [SIGNAL_TUNE_HARRY_POTTER_LONG] = signal_tune_harry_potter_long,
     [SIGNAL_TUNE_JURASSIC_PARK] = signal_tune_jurassic_park,
     [SIGNAL_TUNE_EVANGELION] = signal_tune_evangelion,
+    [SIGNAL_TUNE_AXEL_F] = signal_tune_axel_f,
+    [SIGNAL_TUNE_INDIANA_JONES] = signal_tune_indiana_jones,
+    [SIGNAL_TUNE_SIMPSONS] = signal_tune_simpsons,
+    [SIGNAL_TUNE_PAC_MAN] = signal_tune_pac_man,
+    [SIGNAL_TUNE_ALL_STAR] = signal_tune_all_star,
+    [SIGNAL_TUNE_IMPERIAL_MARCH] = signal_tune_imperial_march,
 };

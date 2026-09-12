@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include "mode_select_face.h"
 #include "watch_common_display.h"
@@ -37,9 +38,15 @@ typedef struct {
     uint8_t seconds_until_commit;
 } mode_select_state_t;
 
+/* Padded to the full six cells: a name shorter than whatever was on screen before it
+ * (PET landing right after GAME, say) would otherwise leave a stray trailing letter.
+ */
 static void _display_mode(mode_select_state_t *state, bool visible) {
+    char buf[7];
+
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "MODE", "MO");
-    watch_display_text(WATCH_POSITION_BOTTOM, visible ? movement_mode_name(state->highlighted_mode) : "      ");
+    snprintf(buf, sizeof(buf), "%-6s", visible ? movement_mode_name(state->highlighted_mode) : "");
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 static void _commit(mode_select_state_t *state) {

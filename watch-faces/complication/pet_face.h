@@ -28,14 +28,17 @@
 /*
  * PET face
  *
- * Home for the creature. It wanders the bottom row, sleeps through the night and
- * shouts when it needs something, from whichever mode has the pet turned on.
+ * Home for the creature. It wanders the bottom row and the top left strip, sleeps
+ * through the night and shouts when it needs something, from whichever mode has the
+ * pet turned on.
  *
- * The top right shows its age in days.
+ * Nothing else is on screen: the numbers are all on the stats page, so the pet has
+ * the display to itself.
  *
- * ALARM tap:   interact with it, which it resents while it is asleep
- * ALARM hold:  peek the exact time; on a dead pet, hatch the next one
- * LIGHT hold:  step through hunger, mood, health and age
+ * ALARM tap:   interact with it; after bedtime the first tap prods it awake instead
+ * ALARM hold:  peek the time and date, the weekday trading places with the month each
+ *              second; on a dead pet, hatch the next one
+ * LIGHT hold:  step through hunger, happiness, health and age in the big digits
  */
 
 #include "movement.h"
@@ -45,12 +48,13 @@
 #define PET_FACE_REACTION_TICKS 4
 
 typedef struct {
-    uint8_t position;
+    bool on_top_row;        ///< which of the pet's two strips it is ambling along
     uint8_t tick;
     uint8_t stat_page;
     uint8_t stat_ticks;
     uint8_t reaction_ticks_left;
     pet_interact_kind_t reaction;
+    uint8_t rise_ticks_left; ///< counts down while hopping up through the digit, then lands
     bool peeking;
     bool showing_stats;
 } pet_face_state_t;

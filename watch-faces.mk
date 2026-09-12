@@ -66,4 +66,5 @@ SRCS += \
   ./watch-faces/complication/pet_face.c \
   ./watch-faces/complication/pet_food_face.c \
   ./watch-faces/complication/pet_play_face.c \
+  ./watch-faces/complication/pet_sing_face.c \
 # New watch faces go above this line.

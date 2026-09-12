@@ -21,7 +21,9 @@ make BOARD=sensorwatch_pro DISPLAY=custom
 ```
 
 Run `make clean` if you switch between a hardware and simulator build and
-something looks wrong.
+something looks wrong. Note that each build has its own output directory, and
+`clean` only removes the one it is invoked for: bare `make clean` clears
+`build/`, and `emmake make clean` clears `build-sim/`.
 
 ## Simulate
 
@@ -33,7 +35,22 @@ python3 -m http.server -d build-sim
 # -> http://localhost:8000/firmware.html
 ```
 
+Browsers cache `firmware.wasm` hard, and `http.server` sends nothing to stop
+them, so a plain reload can keep running the previous build long after a
+rebuild. Hard-reload (Ctrl/Cmd+Shift+R) after rebuilding, or leave DevTools
+open with "Disable cache" ticked.
+
 ## Flash
+
+
+kyle steps for this:
+1. plug into mattbot
+2. sudo picocom -b 115200 /dev/ttyACM0
+3. flash
+3.5 get the build firwmare.uf2 file on mattbot at ~/
+3.6:  lsblk -o NAME,SIZE,FSTYPE,LABEL,MOUNTPOINTS should show mattbot under a sdb            7.8M vfat     WATCHBOOT /media/kile/WATCHBOOT
+4. sudo cp ~/firmware.uf2 /media/kile/WATCHBOOT/
+
 
 1. Double-tap the Reset button on the back of the board.
 2. Wait for the `WATCHBOOT` drive to show up.

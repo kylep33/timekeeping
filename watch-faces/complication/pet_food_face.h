@@ -34,7 +34,7 @@
  * Feeding rolls the food across the row into the pet, which eats it.
  *
  * ALARM tap:   next item on the menu
- * ALARM hold:  feed it the item on screen
+ * ALARM hold:  feed it the item on screen, getting it out of bed if it is asleep
  */
 
 #include "movement.h"
@@ -42,7 +42,6 @@
 
 typedef struct {
     uint8_t selection;
-    uint8_t tick;
     pet_approach_t serving;
 } pet_food_face_state_t;
 

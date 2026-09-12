@@ -31,11 +31,11 @@
     ENDLESS_RUNNER face
 
     This is a basic endless-runner, like the [Chrome Dino game](https://en.wikipedia.org/wiki/Dinosaur_Game).
-    On the title screen, you can select a difficulty by long-pressing LIGHT or toggle sound by long-pressing ALARM.
+    On the score screen, you can select a difficulty by long-pressing LIGHT or toggle sound by long-pressing ALARM.
     LED or ALARM are used to jump.
     If the accelerometer is installed, you can tap the screen to jump and move through the menus after using the
     buttons to go into the first game.
-    High-score is displayed on the top-right on the title screen. During a game, the current score is displayed.
+    High-score is displayed on the top-right on the score screen. During a game, the current score is displayed.
 */
 
 typedef struct {
