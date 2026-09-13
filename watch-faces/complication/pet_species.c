@@ -26,6 +26,7 @@
 
 static const pet_species_t *const SPECIES[PET_SPECIES_COUNT] = {
     [PET_SPECIES_GNOCCI] = &pet_species_gnocci,
+    [PET_SPECIES_SMILEY] = &pet_species_smiley,
 };
 
 const pet_species_t *pet_species_get(pet_species_id_t id) {

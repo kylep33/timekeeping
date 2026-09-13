@@ -42,6 +42,7 @@
 
 typedef enum {
     PET_SPECIES_GNOCCI,
+    PET_SPECIES_SMILEY,
     PET_SPECIES_COUNT,
 } pet_species_id_t;
 
@@ -72,6 +73,7 @@ typedef struct {
 } pet_species_t;
 
 extern const pet_species_t pet_species_gnocci;
+extern const pet_species_t pet_species_smiley;
 
 const pet_species_t *pet_species_get(pet_species_id_t id);
 

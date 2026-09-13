@@ -68,6 +68,7 @@ SRCS += \
   ./watch-faces/complication/pet_grid.c \
   ./watch-faces/complication/pet_species.c \
   ./watch-faces/complication/pet_species_gnocci.c \
+  ./watch-faces/complication/pet_species_smiley.c \
   ./watch-faces/complication/pet_face.c \
   ./watch-faces/complication/pet_food_face.c \
   ./watch-faces/complication/pet_play_face.c \
