@@ -60,7 +60,7 @@ typedef enum {
 static const char *STAT_LABELS[PET_STAT_COUNT] = {
     [PET_STAT_HUNGER]    = "HUNG  ",
     [PET_STAT_HAPPINESS] = "HAPY  ",
-    [PET_STAT_HEALTH]    = "HLTH  ",
+    [PET_STAT_HEALTH]    = "HEAL  ",
     [PET_STAT_AGE]       = "AGE   ",
 };
 
@@ -291,10 +291,6 @@ void pet_face_activate(void *context) {
     state->showing_stats = false;
     state->reaction_ticks_left = 0;
 
-    /* Feeding walks the pet along the bottom row, which is wider than the upper strip,
-     * so it can come back from the food face standing further out than it can stand up
-     * here. Bring it back in rather than clipping it off the edge of the world.
-     */
     uint8_t length = _strip_length(state->level);
     if (pet_position() + PET_SPRITE_WIDTH > length) pet_set_position(length - PET_SPRITE_WIDTH);
 

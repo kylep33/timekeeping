@@ -556,18 +556,11 @@ static void _approach_enter(pet_approach_t *approach, pet_approach_phase_t phase
 }
 
 void pet_approach_start(pet_approach_t *approach, uint8_t pet_position) {
-    // It heads for whichever end it is already nearest, and the food comes from the other.
-    bool nearer_left = pet_position < PET_ROW_LENGTH / 2;
-
+    // It always eats at the left edge, with the food rolling in from the right.
     approach->pet_position = pet_position;
-    approach->prop_from_left = !nearer_left;
-    approach->prop_position = nearer_left ? PET_ROW_LENGTH - 1 : 0;
+    approach->prop_position = PET_ROW_LENGTH - 1;
     approach->running = true;
     _approach_enter(approach, PET_APPROACH_WALKING);
-}
-
-static uint8_t _approach_target(const pet_approach_t *approach) {
-    return approach->prop_from_left ? PET_ROW_LENGTH - 1 : 0;
 }
 
 bool pet_approach_advance(pet_approach_t *approach) {
@@ -577,10 +570,8 @@ bool pet_approach_advance(pet_approach_t *approach) {
 
     switch (approach->phase) {
         case PET_APPROACH_WALKING: {
-            uint8_t target = _approach_target(approach);
-
-            if (approach->pet_position != target) {
-                approach->pet_position += (approach->pet_position < target) ? 1 : -1;
+            if (approach->pet_position != 0) {
+                approach->pet_position--;
                 // It really did walk over there, so that is where the home face finds it.
                 pet_set_position(approach->pet_position);
                 break;
@@ -592,7 +583,7 @@ bool pet_approach_advance(pet_approach_t *approach) {
         case PET_APPROACH_INCOMING:
             // The food stops in the cell alongside the pet, which is where it goes down.
             if (_prop_distance(approach) > 1) {
-                approach->prop_position += approach->prop_from_left ? 1 : -1;
+                approach->prop_position--;
                 break;
             }
 

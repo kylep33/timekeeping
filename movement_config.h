@@ -102,16 +102,17 @@ static const uint8_t setup_faces[] = { FACE_CLOCK, FACE_SET_TIME, FACE_ADVANCED_
 
 #define MODE(display_name, tune, faces, pet) { display_name, tune, faces, sizeof(faces), pet }
 
-/* Mode names are shown on the bottom row, so they must fit six characters.
- * The last flag says whether the pet may interrupt the mode to ask for something.
- */
+static const bool PET_CAN_INTERRUPT = true;
+static const bool PET_CANNOT_INTERRUPT = false;
+
+// Mode names are shown on the bottom row, so they must fit six characters.
 const movement_mode_t movement_modes[] = {
-    MODE("DAILY", SIGNAL_TUNE_AXEL_F, daily_faces, true),
-    MODE("CLIMB", SIGNAL_TUNE_ZELDA_SECRET, climb_faces, false),
-    MODE("GAME", SIGNAL_TUNE_MARIO_THEME, game_faces, false),
-    MODE("PET", SIGNAL_TUNE_KIM_POSSIBLE, pet_faces, true),
-    MODE("EARTH", SIGNAL_TUNE_INDIANA_JONES, outdoor_faces, true),
-    MODE("SETUP", SIGNAL_TUNE_MGS_CODEC, setup_faces, false),
+    MODE("DAILY", SIGNAL_TUNE_AXEL_F, daily_faces, PET_CAN_INTERRUPT),
+    MODE("CLIMB", SIGNAL_TUNE_ZELDA_SECRET, climb_faces, PET_CANNOT_INTERRUPT),
+    MODE("GAME", SIGNAL_TUNE_MARIO_THEME, game_faces, PET_CANNOT_INTERRUPT),
+    MODE("PET", SIGNAL_TUNE_KIM_POSSIBLE, pet_faces, PET_CAN_INTERRUPT),
+    MODE("EARTH", SIGNAL_TUNE_INDIANA_JONES, outdoor_faces, PET_CAN_INTERRUPT),
+    MODE("SETUP", SIGNAL_TUNE_MGS_CODEC, setup_faces, PET_CANNOT_INTERRUPT),
 };
 
 /* The pet's play menu, which offers whichever games are compiled in. Six characters

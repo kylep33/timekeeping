@@ -236,16 +236,6 @@ static int8_t signal_tune_evangelion[] = {
     0,
 };
 
-/* Unlike the rest of this file, the tunes below are transcribed from a cited
- * source rather than from memory: an RTTTL ringtone, a published Arduino
- * melody sourced from a MuseScore transcription, or a note tab, with the
- * source named in each comment. Durations are converted from that source's
- * own tempo into ticks (real ms / 15.625), so the pacing is the song's actual
- * pacing rather than a guess - split roughly 85/15 into note-on and a rest,
- * so repeated notes at the same pitch are still heard as separate hits.
- */
-
-// Nokia RTTTL "CrazyFrog" (o=6, b=125): the full riff, one time through.
 static int8_t signal_tune_axel_f[] = {
     BUZZER_NOTE_F5, 27,
     BUZZER_NOTE_REST, 4,
@@ -298,14 +288,6 @@ static int8_t signal_tune_axel_f[] = {
     0
 };
 
-/* Read from the user's "Raiders March" sheet music: cut time, march tempo
- * 120 - the half note carries the beat, so a whole note is 1000ms at strict
- * tempo. Eased back to 1600ms so the fast pickup notes stay audible instead
- * of blurring. Opens E5-F5-G5 into a held C6, then D5-E5 into a held F5 -
- * then the next phrase: the same climb-into-a-hold shape repeated a fifth
- * higher (G5-A5-B5 into a held F6), followed by a short walking line
- * (A5-B5-C6-D6) up to a final E6.
- */
 static int8_t signal_tune_indiana_jones[] = {
     BUZZER_NOTE_E5, 16,
     BUZZER_NOTE_REST, 3,
@@ -342,7 +324,6 @@ static int8_t signal_tune_indiana_jones[] = {
     0
 };
 
-// RTTTL "Simpsons" (d=4, o=5, b=160): the full opening stanza, hook and answer.
 static int8_t signal_tune_simpsons[] = {
     BUZZER_NOTE_C6, 31,
     BUZZER_NOTE_REST, 5,
@@ -370,11 +351,6 @@ static int8_t signal_tune_simpsons[] = {
     0
 };
 
-/* robsoncouto/arduino-songs pacman.ino (tempo 105, sourced from a MuseScore
- * transcription): both phrases of the "waka waka" intro, the whole thing.
- * The second phrase's closing run is dropped an octave from the source - at
- * the written pitch it was shriller than the rest of the tune.
- */
 static int8_t signal_tune_pac_man[] = {
     BUZZER_NOTE_B4, 8,
     BUZZER_NOTE_REST, 1,
@@ -441,20 +417,6 @@ static int8_t signal_tune_pac_man[] = {
     0
 };
 
-/* Pitches straight from noobnotes.net's own letter-note text for this song
- * ("G-^D-B B A G" / "G ^C B B-A A G" / "G ^C B B-A A G A E-D" for these three
- * lyric lines) - not their featured image, which is a different section of
- * the song. That source's "me...I ain't" is a repeated G before the rising
- * fourth up to "ain't"; this array used to collapse "me" and "I" into one
- * note, which shifted every pitch after it onto the wrong syllable.
- *
- * Real tempo is 104 BPM (songbpm.com), so a sixteenth note is ~9 ticks at the
- * 64 Hz timer; the verse is sung almost like spoken word on that grid, with
- * the multi-syllable words ("some-bo-dy", "gon-na", "sharp-est") compressed
- * to sixteenths against the surrounding eighth notes, a quarter-note pause
- * at the line break ("roll ME, I ain't..."), and a held half note on the
- * final "shed" (itself a two-note E-D slide in the source).
- */
 static int8_t signal_tune_all_star[] = {
     BUZZER_NOTE_G4, 14,            // some
     BUZZER_NOTE_REST, 4,
@@ -504,12 +466,6 @@ static int8_t signal_tune_all_star[] = {
     0
 };
 
-/* robsoncouto/arduino-songs imperialmarch.ino (tempo 120, sourced from a
- * MuseScore tenor-sax transcription): not the famous opening call, but the
- * syncopated turn right after it ("A5, A4-A4, A5, G#5-G5, D#5-D5-D#5...")
- * through to its cadence - real tempo, no extra scaling needed since nothing
- * in this stretch is a long held note.
- */
 static int8_t signal_tune_imperial_march[] = {
     BUZZER_NOTE_A5, 28,
     BUZZER_NOTE_REST, 4,

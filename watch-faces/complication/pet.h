@@ -25,26 +25,10 @@
 #ifndef PET_H_
 #define PET_H_
 
-/*
- * PET
- *
- * The creature behind the pet home, food, play and sing faces. It owns the one copy
- * of the pet, so every face is a view onto the same animal.
- *
- * Needs drain against the wall clock rather than a tick count, so the pet keeps
- * living while the watch sleeps or shows another face. Nothing is stored that can
- * be derived: the daily sleep schedule and the illness roll are hashed from the
- * date, so they hold steady all day and vary from one day to the next.
- */
-
 #include "movement.h"
 
 #define PET_STAT_MAX 100
 
-/* The pet's world is two strips: the six character bottom row, and the top left,
- * which is three cells on the custom LCD and two on the classic one. The home face
- * spends no space on a label so the pet has the upper strip to hop up to.
- */
 #define PET_ROW_LENGTH 6
 #define PET_TOP_ROW_LENGTH 3
 #define PET_SPRITE_WIDTH 1
@@ -147,26 +131,21 @@ void pet_stat_draw(uint8_t stat);
 
 /// @brief The stages of a feeding, in the order they play.
 typedef enum {
-    PET_APPROACH_WALKING,   ///< crossing to its own side of the row, before the food shows up
-    PET_APPROACH_INCOMING,  ///< food rolling in, the pet swelling as it gets close
-    PET_APPROACH_MOUTH,     ///< open, taking the food
-    PET_APPROACH_SETTLING,  ///< shrinking back down now the food is gone
+    PET_APPROACH_WALKING,
+    PET_APPROACH_INCOMING,
+    PET_APPROACH_MOUTH,
+    PET_APPROACH_SETTLING,
 } pet_approach_phase_t;
 
-/* A prop crossing the row into the pet, which is what feeding looks like. The pet
- * walks to whichever end it is already nearest and waits there, so the prop always
- * comes in from the far end with the width of the row to travel.
- */
 typedef struct {
     uint8_t pet_position;
     uint8_t prop_position;
     uint8_t phase_ticks;
     pet_approach_phase_t phase;
-    bool prop_from_left;
     bool running;
 } pet_approach_t;
 
-/// @brief Starts a feeding, with the pet setting off from wherever it was standing.
+/// @brief Starts a feeding: the pet heads for the left edge from wherever it was standing.
 void pet_approach_start(pet_approach_t *approach, uint8_t pet_position);
 
 /// @brief Steps the animation on. Returns true on the single tick the food goes down.
