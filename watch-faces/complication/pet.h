@@ -118,8 +118,8 @@ const char *pet_sprite(pet_mood_t mood, uint8_t frame);
 const char *pet_rise_sprite(bool stretched);
 
 /* Where the pet is standing, as a column shared by every face, so walking off one
- * screen and onto another leaves it where you left it. Which strip it is on is the
- * home face's business, since nowhere else draws the upper one.
+ * screen and onto another leaves it where you left it. Which strip and which half of
+ * the digit it is in is the home face's business, since nowhere else draws those.
  */
 uint8_t pet_position(void);
 void pet_set_position(uint8_t position);
@@ -186,6 +186,9 @@ pet_interact_kind_t pet_interact(void);
 
 /// @brief The current species' reaction sprite for an interaction, alternating with frame.
 const char *pet_interact_sprite(pet_interact_kind_t kind, uint8_t frame);
+
+/// @brief The current species' sprite for the top half of a digit.
+const char *pet_perch_sprite(void);
 
 /// @brief The current species' singing mouth: shut, then hinged open, alternating with frame.
 const char *pet_sing_sprite(uint8_t frame);
