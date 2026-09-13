@@ -30,7 +30,7 @@
  *
  * The pet's games, listed in pet_games so the menu grows with whatever is
  * compiled in. Poking and its kin live on the home face's interact button now,
- * not here.
+ * not here. The top right shows how happy it currently is.
  *
  * ALARM tap:   next game
  * ALARM hold:  play it

@@ -32,7 +32,7 @@
  * plays is whatever the hourly chime could ever be, not a tune written just for
  * this face. SING gives way to the pet itself, planted on a fresh random spot on
  * the row and singing along with its mouth on the actual notes, then returns once
- * the tune stops.
+ * the tune stops. The top right shows how happy it currently is, which a song raises.
  *
  * ALARM tap:   sing something at random
  */

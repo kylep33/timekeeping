@@ -3,9 +3,25 @@
 My custom Sensor Watch firmware, forked from
 [Second Movement](https://github.com/joeycastillo/Second-Movement).
 
-**Hardware:** Sensor Watch Pro board + custom LCD (Oddly Specific Objects) +
-LIS2DW accelerometer, in a Casio F-84W case (module 593, same as the F-91W
-Sensor Watch targets).
+heres what i have
+**Hardware:** 
+- Sensor Watch Pro board 
+-  custom LCD (Oddly Specific Objects) +
+- LIS2DW accelerometer, 
+- in a Casio F-84W case
+==
+
+
+## initial hardware setup
+### take apart initial casio first.
+1. just watch this video todo put link here.
+2. errr kyle right better docs and take picutres when u do it the second time with the diplat accelerometer etc
+3. oaky put it pack together.
+4. bend the accleromter up more sicne you need to. for f84
+5. oh also you should flash it before you put the case back 2gether.
+6. oh. to flash it i had to connect it it mattbot and use picocom and then type flash, and then i could copy the uf2 file. see below. maybe some wierd drive mounting or unmountung. idk. 
+7. oh u also have to generate the 
+
 
 ## Build
 

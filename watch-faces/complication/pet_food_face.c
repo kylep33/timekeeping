@@ -23,16 +23,12 @@
  */
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include "pet_food_face.h"
 #include "watch_common_display.h"
 
 // Four ticks per second, so the food crosses the row at a readable pace.
 static const uint8_t TICK_FREQUENCY_HZ = 4;
-
-// The top right holds two digits, and hunger never exceeds PET_STAT_MAX anyway.
-static const uint16_t TOP_RIGHT_WRAP = 100;
 
 typedef struct {
     const char *name;       ///< six characters, and no glyph the bottom row cannot draw
@@ -49,11 +45,8 @@ static const pet_food_t FOODS[] = {
 static const uint8_t NUM_FOODS = sizeof(FOODS) / sizeof(pet_food_t);
 
 static void _redraw(pet_food_face_state_t *state) {
-    char buf[4];
-
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "EAT", "EA");
-    snprintf(buf, sizeof(buf), "%2d", pet_get()->hunger % TOP_RIGHT_WRAP);
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+    pet_stat_draw(pet_get()->hunger);
 
     if (state->serving.running) {
         pet_approach_draw(&state->serving, FOODS[state->selection].sprite);

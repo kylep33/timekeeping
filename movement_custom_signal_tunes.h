@@ -441,54 +441,66 @@ static int8_t signal_tune_pac_man[] = {
     0
 };
 
-/* noobnotes.net letter notes for "Somebody once told me the world is gonna
- * roll me / I ain't the sharpest tool in the shed": the actual melody (a
- * rising fourth, not a repeated note), through the end of the first stanza.
+/* Pitches straight from noobnotes.net's own letter-note text for this song
+ * ("G-^D-B B A G" / "G ^C B B-A A G" / "G ^C B B-A A G A E-D" for these three
+ * lyric lines) - not their featured image, which is a different section of
+ * the song. That source's "me...I ain't" is a repeated G before the rising
+ * fourth up to "ain't"; this array used to collapse "me" and "I" into one
+ * note, which shifted every pitch after it onto the wrong syllable.
+ *
+ * Real tempo is 104 BPM (songbpm.com), so a sixteenth note is ~9 ticks at the
+ * 64 Hz timer; the verse is sung almost like spoken word on that grid, with
+ * the multi-syllable words ("some-bo-dy", "gon-na", "sharp-est") compressed
+ * to sixteenths against the surrounding eighth notes, a quarter-note pause
+ * at the line break ("roll ME, I ain't..."), and a held half note on the
+ * final "shed" (itself a two-note E-D slide in the source).
  */
 static int8_t signal_tune_all_star[] = {
-    BUZZER_NOTE_G4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_D5, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_B4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_B4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_A4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_G4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_G4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_C5, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_B4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_B4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_A4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_A4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_G4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_C5, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_B4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_B4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_A4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_A4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_G4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_A4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_E4, 12,
-    BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_D4, 26,
+    BUZZER_NOTE_G4, 14,            // some
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_D5, 7,             // -bo-
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_B4, 7,             // -dy
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_B4, 14,            // once
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_A4, 14,            // told
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_G4, 14,            // me
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_G4, 14,            // the
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_C5, 14,            // world
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_B4, 14,            // is
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_B4, 7,             // gon-
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A4, 7,             // -na
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A4, 14,            // roll
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_G4, 29,            // me (line break, held)
+    BUZZER_NOTE_REST, 7,
+    BUZZER_NOTE_G4, 14,            // i
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_C5, 14,            // ain't (rising fourth from "i")
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_B4, 14,            // the
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_B4, 7,             // sharp-
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A4, 7,             // -est
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A4, 14,            // tool
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_G4, 14,            // in
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_A4, 14,            // the
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_E4, 14,            // shed (slide start)
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_D4, 72,            // shed (held)
     0
 };
 

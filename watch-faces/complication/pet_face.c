@@ -43,13 +43,10 @@ static const uint8_t RISE_TICKS = 2;
 // The off frame is a blink, so it should be a flicker rather than half the pet's life.
 static const uint8_t BLINK_EVERY_N_TICKS = 8;
 
-// One stat per second is slow enough to read while the light button is held down.
-static const uint8_t TICKS_PER_STAT = 2;
-
 // The top right holds two digits, so later generations wrap.
 static const uint16_t TOP_RIGHT_WRAP = 100;
 
-// The bottom row spends three characters on the label, leaving three for the number.
+// Three digits is all the room a number gets, whether on the top row or beside a label.
 static const uint16_t STAT_WRAP = 1000;
 
 typedef enum {
@@ -60,14 +57,14 @@ typedef enum {
     PET_STAT_COUNT,
 } pet_stat_t;
 
-/* Three characters each, because the stats are read off the big digits rather than
- * squeezed into the top left, and every glyph here draws in the bottom row.
+/* Padded to the full bottom row, so a shorter label wipes whatever the last page left
+ * behind. Every glyph here draws in the bottom row.
  */
 static const char *STAT_LABELS[PET_STAT_COUNT] = {
-    [PET_STAT_HUNGER]    = "HUN",
-    [PET_STAT_HAPPINESS] = "HAP",
-    [PET_STAT_HEALTH]    = "HEA",
-    [PET_STAT_AGE]       = "AGE",
+    [PET_STAT_HUNGER]    = "HUNG  ",
+    [PET_STAT_HAPPINESS] = "HAPY  ",
+    [PET_STAT_HEALTH]    = "HLTH  ",
+    [PET_STAT_AGE]       = "AGE   ",
 };
 
 static uint16_t _stat_value(const pet_t *pet, pet_stat_t stat) {
@@ -187,20 +184,23 @@ static void _display_time(void) {
     watch_set_colon();
 }
 
-/* Label and number both go in the big digits, where three cramped characters in the
- * top left were the difference between reading HEALTH and guessing at it.
+/* The label gets the big digits to itself, with room to spell four letters, and the
+ * number sits right-aligned along the top: hundreds in the last cell of the top left,
+ * tens and ones in the top right.
  */
 static void _display_stats(pet_face_state_t *state) {
     const pet_t *pet = pet_get();
-    char top[PET_TOP_ROW_LENGTH + 1];
-    char buf[PET_ROW_LENGTH + 1];
+    char number[4];
 
     watch_clear_colon();
-    pet_top_clear(top);
-    pet_top_draw(top);
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
-    snprintf(buf, sizeof(buf), "%s%3d", STAT_LABELS[state->stat_page], _stat_value(pet, state->stat_page) % STAT_WRAP);
-    watch_display_text(WATCH_POSITION_BOTTOM, buf);
+    snprintf(number, sizeof(number), "%3d", _stat_value(pet, state->stat_page) % STAT_WRAP);
+
+    char top_left[] = { ' ', ' ', number[0], '\0' };
+    char top_left_fallback[] = { ' ', number[0], '\0' };
+
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, top_left, top_left_fallback);
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, number + 1);
+    watch_display_text(WATCH_POSITION_BOTTOM, STAT_LABELS[state->stat_page]);
 }
 
 static void _redraw(pet_face_state_t *state) {
@@ -214,21 +214,25 @@ static void _redraw(pet_face_state_t *state) {
     else _display_pet(state, mood);
 }
 
-static void _advance_stats(pet_face_state_t *state) {
-    state->stat_ticks++;
-    if (state->stat_ticks < TICKS_PER_STAT) return;
+/* The pet counts as a page too, after the last stat, so the same tap that brings the
+ * numbers up is the one that puts them away.
+ */
+static void _next_stat_page(pet_face_state_t *state) {
+    if (!state->showing_stats) {
+        state->showing_stats = true;
+        state->stat_page = 0;
+        return;
+    }
 
-    state->stat_ticks = 0;
-    state->stat_page = (state->stat_page + 1) % PET_STAT_COUNT;
+    state->stat_page++;
+    if (state->stat_page >= PET_STAT_COUNT) state->showing_stats = false;
 }
 
 static void _advance(pet_face_state_t *state, pet_mood_t mood) {
     state->tick++;
 
-    if (state->showing_stats) {
-        _advance_stats(state);
-        return;
-    }
+    // Nobody can see the pet behind a stat, so it holds still until it's back on screen.
+    if (state->showing_stats) return;
 
     // Mid-reaction the pet holds still so there's something to actually look at.
     if (state->reaction_ticks_left > 0) {
@@ -307,15 +311,15 @@ bool pet_face_loop(movement_event_t event, void *context) {
             state->peeking = false;
             _redraw(state);
             break;
-        case EVENT_LIGHT_LONG_PRESS:
-            state->showing_stats = true;
-            state->stat_page = 0;
-            state->stat_ticks = 0;
+        // A tap belongs to the stats, so the LED waits for a hold instead of lighting on every press.
+        case EVENT_LIGHT_BUTTON_DOWN:
+            break;
+        case EVENT_LIGHT_BUTTON_UP:
+            _next_stat_page(state);
             _redraw(state);
             break;
-        case EVENT_LIGHT_LONG_UP:
-            state->showing_stats = false;
-            _redraw(state);
+        case EVENT_LIGHT_LONG_PRESS:
+            movement_illuminate_led();
             break;
         case EVENT_BACKGROUND_TASK:
             pet_call();

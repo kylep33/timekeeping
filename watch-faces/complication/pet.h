@@ -142,6 +142,9 @@ void pet_top_place(char *row, uint8_t position, const char *sprite);
 /// @brief Puts a prepared upper strip on screen, using whatever cells the LCD has.
 void pet_top_draw(const char *row);
 
+/// @brief Puts a stat in the top right, showing a full 100 as 99 rather than wrapping to 0.
+void pet_stat_draw(uint8_t stat);
+
 /// @brief The stages of a feeding, in the order they play.
 typedef enum {
     PET_APPROACH_WALKING,   ///< crossing to its own side of the row, before the food shows up
