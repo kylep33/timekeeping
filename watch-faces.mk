@@ -63,6 +63,11 @@ SRCS += \
   ./watch-faces/complication/tide_face.c \
   ./watch-faces/clock/world_clock2_face.c \
   ./watch-faces/complication/pet.c \
+  ./watch-faces/complication/pet_default_settings.c \
+  ./watch-faces/complication/pet_screen.c \
+  ./watch-faces/complication/pet_grid.c \
+  ./watch-faces/complication/pet_species.c \
+  ./watch-faces/complication/pet_species_gnocci.c \
   ./watch-faces/complication/pet_face.c \
   ./watch-faces/complication/pet_food_face.c \
   ./watch-faces/complication/pet_play_face.c \

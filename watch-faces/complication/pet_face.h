@@ -46,26 +46,8 @@
 #include "movement.h"
 #include "pet.h"
 
-// How long an interaction sprite plays before the pet goes back to its usual mood.
-#define PET_FACE_REACTION_TICKS 4
-
-/* Rows of the grid the pet walks, bottom up. Each digit is two squares tall, and the
- * pet only steps one square at a time so it never jumps between strips.
- */
-typedef enum {
-    PET_FACE_LEVEL_BOTTOM_LOW,
-    PET_FACE_LEVEL_BOTTOM_HIGH,
-    PET_FACE_LEVEL_TOP_LOW,
-    PET_FACE_LEVEL_TOP_HIGH,
-    PET_FACE_LEVEL_COUNT,
-} pet_face_level_t;
-
 typedef struct {
-    pet_face_level_t level;
-    uint8_t tick;
     uint8_t stat_page;
-    uint8_t reaction_ticks_left;
-    pet_interact_kind_t reaction;
     bool peeking;
     bool showing_stats;
 } pet_face_state_t;

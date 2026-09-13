@@ -22,40 +22,33 @@
  * SOFTWARE.
  */
 
-#ifndef PET_FOOD_FACE_H_
-#define PET_FOOD_FACE_H_
-
-/*
- * PET FOOD face
- *
- * The pet's dinner menu. The top right shows how hungry it currently is, so you
- * can see whether a snack will do or it wants the cake.
- *
- * Feeding rolls the food across the row into the pet, which eats it.
- *
- * ALARM tap:   next item on the menu
- * ALARM hold:  feed it the item on screen, getting it out of bed if it is asleep
- */
+#ifndef PET_SCREEN_H_
+#define PET_SCREEN_H_
 
 #include "movement.h"
-#include "pet.h"
 
-typedef struct {
-    uint8_t selection;
-    bool eating;
-} pet_food_face_state_t;
+#define PET_SCREEN_BOTTOM_LENGTH 6
+#define PET_SCREEN_TOP_LENGTH 3
 
-void pet_food_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void pet_food_face_activate(void *context);
-bool pet_food_face_loop(movement_event_t event, void *context);
-void pet_food_face_resign(void *context);
+/// @brief How many cells the top left strip has on the LCD actually fitted.
+uint8_t pet_screen_top_length(void);
 
-#define pet_food_face ((const watch_face_t){ \
-    pet_food_face_setup, \
-    pet_food_face_activate, \
-    pet_food_face_loop, \
-    pet_food_face_resign, \
-    NULL, \
-})
+/// @brief Blanks a bottom row buffer, which must hold PET_SCREEN_BOTTOM_LENGTH + 1 characters.
+void pet_screen_bottom_clear(char *row);
 
-#endif // PET_FOOD_FACE_H_
+/// @brief Draws a sprite into a blanked bottom row, clipping anything past the edge.
+void pet_screen_bottom_place(char *row, uint8_t position, const char *sprite);
+
+/// @brief Blanks a top strip buffer, which must hold PET_SCREEN_TOP_LENGTH + 1 characters.
+void pet_screen_top_clear(char *row);
+
+/// @brief Draws a sprite into a blanked top strip, clipping anything past the edge.
+void pet_screen_top_place(char *row, uint8_t position, const char *sprite);
+
+/// @brief Puts a prepared top strip on screen, using whatever cells the LCD has.
+void pet_screen_top_draw(const char *row);
+
+/// @brief Puts a stat in the top right, showing a full 100 as 99 rather than wrapping to 0.
+void pet_screen_stat_draw(uint8_t stat);
+
+#endif // PET_SCREEN_H_

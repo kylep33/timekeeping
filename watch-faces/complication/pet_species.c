@@ -22,40 +22,16 @@
  * SOFTWARE.
  */
 
-#ifndef PET_FOOD_FACE_H_
-#define PET_FOOD_FACE_H_
+#include "pet_species.h"
 
-/*
- * PET FOOD face
- *
- * The pet's dinner menu. The top right shows how hungry it currently is, so you
- * can see whether a snack will do or it wants the cake.
- *
- * Feeding rolls the food across the row into the pet, which eats it.
- *
- * ALARM tap:   next item on the menu
- * ALARM hold:  feed it the item on screen, getting it out of bed if it is asleep
- */
+static const pet_species_t *const SPECIES[PET_SPECIES_COUNT] = {
+    [PET_SPECIES_GNOCCI] = &pet_species_gnocci,
+};
 
-#include "movement.h"
-#include "pet.h"
+const pet_species_t *pet_species_get(pet_species_id_t id) {
+    return SPECIES[id];
+}
 
-typedef struct {
-    uint8_t selection;
-    bool eating;
-} pet_food_face_state_t;
-
-void pet_food_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void pet_food_face_activate(void *context);
-bool pet_food_face_loop(movement_event_t event, void *context);
-void pet_food_face_resign(void *context);
-
-#define pet_food_face ((const watch_face_t){ \
-    pet_food_face_setup, \
-    pet_food_face_activate, \
-    pet_food_face_loop, \
-    pet_food_face_resign, \
-    NULL, \
-})
-
-#endif // PET_FOOD_FACE_H_
+const pet_species_t *pet_species_current(void) {
+    return pet_species_get(pet_species_id());
+}

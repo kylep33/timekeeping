@@ -22,40 +22,43 @@
  * SOFTWARE.
  */
 
-#ifndef PET_FOOD_FACE_H_
-#define PET_FOOD_FACE_H_
+#ifndef PET_GRID_H_
+#define PET_GRID_H_
 
 /*
- * PET FOOD face
- *
- * The pet's dinner menu. The top right shows how hungry it currently is, so you
- * can see whether a snack will do or it wants the cake.
- *
- * Feeding rolls the food across the row into the pet, which eats it.
- *
- * ALARM tap:   next item on the menu
- * ALARM hold:  feed it the item on screen, getting it out of bed if it is asleep
+ * The squares a one cell pet can walk: the bottom row and the top left strip, each
+ * digit two squares tall. Pets that don't walk around have no use for it.
  */
 
 #include "movement.h"
-#include "pet.h"
+
+#define PET_GRID_SPRITE_WIDTH 1
+
+// Bottom up. A pet only steps one level at a time, so it never jumps between strips.
+typedef enum {
+    PET_GRID_LEVEL_BOTTOM_LOW,
+    PET_GRID_LEVEL_BOTTOM_HIGH,
+    PET_GRID_LEVEL_TOP_LOW,
+    PET_GRID_LEVEL_TOP_HIGH,
+    PET_GRID_LEVEL_COUNT,
+} pet_grid_level_t;
 
 typedef struct {
-    uint8_t selection;
-    bool eating;
-} pet_food_face_state_t;
+    pet_grid_level_t level;
+    uint8_t column;
+} pet_grid_spot_t;
 
-void pet_food_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void pet_food_face_activate(void *context);
-bool pet_food_face_loop(movement_event_t event, void *context);
-void pet_food_face_resign(void *context);
+bool pet_grid_in_top_half(pet_grid_level_t level);
 
-#define pet_food_face ((const watch_face_t){ \
-    pet_food_face_setup, \
-    pet_food_face_activate, \
-    pet_food_face_loop, \
-    pet_food_face_resign, \
-    NULL, \
-})
+/// @brief Moves by the given steps, or stays put if that square doesn't exist.
+void pet_grid_step(pet_grid_spot_t *spot, int8_t level_step, int8_t column_step);
 
-#endif // PET_FOOD_FACE_H_
+/// @brief Pulls the column back inside whichever strip the spot is on.
+void pet_grid_clamp(pet_grid_spot_t *spot);
+
+void pet_grid_drop_to_bottom_half(pet_grid_spot_t *spot);
+
+/// @brief Draws the sprite at the spot, blanking the rest of both strips.
+void pet_grid_draw(const pet_grid_spot_t *spot, const char *sprite);
+
+#endif // PET_GRID_H_

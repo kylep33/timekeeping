@@ -25,11 +25,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "pet_sing_face.h"
+#include "pet_screen.h"
+#include "pet_species.h"
 #include "watch_common_display.h"
 
 static const uint8_t IDLE_TICK_FREQUENCY_HZ = 1;
 static const uint8_t SINGING_TICK_FREQUENCY_HZ = 64;
-
 
 static const char *TUNE_NAMES[SIGNAL_TUNE_COUNT] = {
     // [SIGNAL_TUNE_DEFAULT]            = "CHIRP ",
@@ -68,18 +69,16 @@ static bool _note_sounding(const int8_t *sequence, uint16_t elapsed_ticks) {
 
 static void _redraw(pet_sing_face_state_t *state) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "   ", "  ");
-    pet_stat_draw(pet_get()->happiness);
+    pet_screen_stat_draw(pet_get()->happiness);
 
     if (state->singing) {
-        char row[PET_ROW_LENGTH + 1];
         bool mouth_open = _note_sounding(movement_get_signal_tune(state->tune), state->elapsed_ticks);
 
-        pet_row_clear(row);
-        pet_row_place(row, pet_position(), pet_sing_sprite(mouth_open ? 1 : 0));
         watch_set_indicator(WATCH_INDICATOR_BELL);
-        watch_display_text(WATCH_POSITION_BOTTOM, row);
+        pet_species_current()->sing_draw(mouth_open);
     } else {
         watch_clear_indicator(WATCH_INDICATOR_BELL);
+        watch_clear_colon();
         watch_display_text(WATCH_POSITION_BOTTOM, "SING  ");
     }
 }
@@ -108,9 +107,7 @@ static void _sing(pet_sing_face_state_t *state) {
     }
 
     pet_sing();
-
-    // A fresh spot for every performance, rather than wherever the last face left it standing.
-    pet_set_position(rand() % (PET_ROW_LENGTH - PET_SPRITE_WIDTH + 1));
+    pet_species_current()->sing_start();
 
     state->tune = _random_tune();
     movement_play_signal_tune(state->tune);
