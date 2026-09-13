@@ -101,6 +101,7 @@ typedef struct {
     const char *mood_sprites[PET_MOOD_COUNT][PET_ANIMATION_FRAMES];
     const char *interact_sprites[PET_INTERACT_COUNT][PET_ANIMATION_FRAMES];
     const char *sing_mouth_shut;  ///< the closed half of the singing hinge; the open half is LCD-specific
+    const char *perched;        ///< in the top half of a digit, where only a box fits
     const char *eating_ball;    ///< sat waiting, with the food still some way off
     const char *eating_swell;   ///< rounded out, the food nearly here
     const char *eating_mouth;   ///< open, taking it
@@ -121,6 +122,7 @@ static const pet_species_t SPECIES_GNOCCI = {
         [PET_INTERACT_WAVE] = { "O", "o" },
     },
     .sing_mouth_shut = "o",
+    .perched = "#",
     .eating_ball = "o",
     .eating_swell = "O",
     .eating_mouth = "C",
@@ -472,6 +474,10 @@ const char *pet_interact_sprite(pet_interact_kind_t kind, uint8_t frame) {
     if (kind >= PET_INTERACT_COUNT) kind = PET_INTERACT_POKE;
 
     return _species()->interact_sprites[kind][frame % PET_ANIMATION_FRAMES];
+}
+
+const char *pet_perch_sprite(void) {
+    return _species()->perched;
 }
 
 /* A closed mouth is C+D+E+G: a small box sitting low in the digit, its lid resting on

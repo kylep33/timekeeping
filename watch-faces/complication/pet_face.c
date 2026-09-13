@@ -34,11 +34,8 @@ static const uint8_t TICK_FREQUENCY_HZ = 2;
 
 static const uint8_t WANDER_CHOICES = 3;
 
-// Roughly one amble in eight is a hop between the two strips rather than a step along one.
-static const uint8_t HOP_ODDS = 8;
-
-// Two ticks read as a hop: low in the digit, then stretched tall, before it lands on the strip above.
-static const uint8_t RISE_TICKS = 2;
+// Roughly one amble in eight is a step up or down rather than along.
+static const uint8_t CLIMB_ODDS = 8;
 
 // The off frame is a blink, so it should be a flicker rather than half the pet's life.
 static const uint8_t BLINK_EVERY_N_TICKS = 8;
@@ -80,30 +77,44 @@ static uint16_t _stat_value(const pet_t *pet, pet_stat_t stat) {
     }
 }
 
-static uint8_t _strip_length(bool on_top_row) {
-    return on_top_row ? pet_top_row_length() : PET_ROW_LENGTH;
+static bool _on_top_strip(pet_face_level_t level) {
+    return level == PET_FACE_LEVEL_TOP_LOW || level == PET_FACE_LEVEL_TOP_HIGH;
 }
 
-/* Three ways to move, so the pet drifts about rather than marching wall to wall, plus
- * the occasional hop up to the strip where the name used to be.
+static bool _in_top_half(pet_face_level_t level) {
+    return level == PET_FACE_LEVEL_BOTTOM_HIGH || level == PET_FACE_LEVEL_TOP_HIGH;
+}
+
+static uint8_t _strip_length(pet_face_level_t level) {
+    return _on_top_strip(level) ? pet_top_row_length() : PET_ROW_LENGTH;
+}
+
+// The upper strip is shorter, so only some bottom row digits have a square above them.
+static bool _square_exists(int8_t level, int8_t column) {
+    if (level < 0 || level >= PET_FACE_LEVEL_COUNT || column < 0) return false;
+
+    return column + PET_SPRITE_WIDTH <= _strip_length(level);
+}
+
+/* Left, right or stay put, so the pet drifts about rather than marching wall to wall,
+ * plus the odd step up or down. Walking into a square that isn't there is a no-op.
  */
 static void _wander(pet_face_state_t *state) {
-    uint8_t position = pet_position();
-    uint8_t length = _strip_length(state->on_top_row);
+    int8_t level = state->level;
+    int8_t column = pet_position();
 
-    if (rand() % HOP_ODDS == 0) {
-        state->on_top_row = !state->on_top_row;
-        length = _strip_length(state->on_top_row);
+    if (rand() % CLIMB_ODDS == 0) level += (rand() % 2 == 0) ? 1 : -1;
+    else column += (rand() % WANDER_CHOICES) - 1;
 
-        // The upper strip is the shorter of the two, so coming up can mean shuffling in.
-        if (position + PET_SPRITE_WIDTH > length) pet_set_position(length - PET_SPRITE_WIDTH);
-        return;
-    }
+    if (!_square_exists(level, column)) return;
 
-    uint8_t step = rand() % WANDER_CHOICES;
+    state->level = level;
+    pet_set_position(column);
+}
 
-    if (step == 0 && position > 0) pet_set_position(position - 1);
-    else if (step == 2 && position + PET_SPRITE_WIDTH < length) pet_set_position(position + 1);
+// Moods and reactions need the whole digit to read.
+static void _drop_to_bottom_half(pet_face_state_t *state) {
+    if (_in_top_half(state->level)) state->level--;
 }
 
 static uint8_t _frame_for(pet_mood_t mood, uint8_t tick) {
@@ -124,6 +135,7 @@ static void _update_indicators(pet_mood_t mood) {
 }
 
 static const char *_current_sprite(pet_face_state_t *state, pet_mood_t mood) {
+    if (_in_top_half(state->level)) return pet_perch_sprite();
     if (state->reaction_ticks_left > 0) return pet_interact_sprite(state->reaction, state->tick);
 
     return pet_sprite(mood, _frame_for(mood, state->tick));
@@ -141,7 +153,7 @@ static void _display_pet(pet_face_state_t *state, pet_mood_t mood) {
     pet_top_clear(top);
     pet_row_clear(row);
 
-    if (state->on_top_row) pet_top_place(top, pet_position(), sprite);
+    if (_on_top_strip(state->level)) pet_top_place(top, pet_position(), sprite);
     else pet_row_place(row, pet_position(), sprite);
 
     pet_top_draw(top);
@@ -242,6 +254,7 @@ static void _advance(pet_face_state_t *state, pet_mood_t mood) {
 
     // A sleeping, sick or dying pet stays put; only a comfortable one bothers moving.
     if (mood == PET_MOOD_HAPPY || mood == PET_MOOD_HUNGRY) _wander(state);
+    else _drop_to_bottom_half(state);
 }
 
 static void _handle_hold(pet_face_state_t *state) {
@@ -258,6 +271,7 @@ static void _handle_interact(pet_face_state_t *state) {
 
     if (kind == PET_INTERACT_COUNT) return;
 
+    _drop_to_bottom_half(state);
     state->reaction = kind;
     state->reaction_ticks_left = PET_FACE_REACTION_TICKS;
 }
@@ -281,7 +295,7 @@ void pet_face_activate(void *context) {
      * so it can come back from the food face standing further out than it can stand up
      * here. Bring it back in rather than clipping it off the edge of the world.
      */
-    uint8_t length = _strip_length(state->on_top_row);
+    uint8_t length = _strip_length(state->level);
     if (pet_position() + PET_SPRITE_WIDTH > length) pet_set_position(length - PET_SPRITE_WIDTH);
 
     movement_request_tick_frequency(TICK_FREQUENCY_HZ);
