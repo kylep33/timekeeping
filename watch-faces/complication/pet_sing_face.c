@@ -27,20 +27,10 @@
 #include "pet_sing_face.h"
 #include "watch_common_display.h"
 
-/* A resting face doesn't need ticks. A singing one runs at 64Hz - the same rate the
- * buzzer hardware itself steps through a sequence's durations at - so the mouth can
- * be read off the tune's own note data one tick at a time, tightly, instead of just
- * bobbing on a beat of its own.
- */
 static const uint8_t IDLE_TICK_FREQUENCY_HZ = 1;
 static const uint8_t SINGING_TICK_FREQUENCY_HZ = 64;
 
-/* Six characters each, named after whichever tune they pick out of
- * movement_custom_signal_tunes.h. Keep this in step with signal_tune_index_t.
- *
- * A commented-out entry mutes that tune rather than crashing: _random_tune()
- * below only picks among the ones with a name.
- */
+
 static const char *TUNE_NAMES[SIGNAL_TUNE_COUNT] = {
     // [SIGNAL_TUNE_DEFAULT]            = "CHIRP ",
     [SIGNAL_TUNE_ZELDA_SECRET]       = "ZELDA ",
@@ -61,12 +51,6 @@ static const char *TUNE_NAMES[SIGNAL_TUNE_COUNT] = {
     [SIGNAL_TUNE_IMPERIAL_MARCH]     = "VADER ",
 };
 
-/* Walks a tune's own [note, duration, ...] pairs exactly the way cb_watch_buzzer_seq()
- * does in watch_tcc.c, to find whichever note is sounding at a given tick - so the
- * mouth opens and shuts on the tune's actual notes and rests rather than a guessed
- * rhythm. Doesn't handle that player's negative repeat markers, since no signal tune
- * here uses one.
- */
 static bool _note_sounding(const int8_t *sequence, uint16_t elapsed_ticks) {
     uint16_t position = 0;
 
@@ -82,11 +66,6 @@ static bool _note_sounding(const int8_t *sequence, uint16_t elapsed_ticks) {
     return false;
 }
 
-/* SING sits on the big digits until a press starts a song, at which point the word
- * gives way to the pet itself, mouth opening and shutting right on the tune's own
- * notes, in whatever column it's currently standing in. SING comes back the moment
- * the tune actually stops sounding.
- */
 static void _redraw(pet_sing_face_state_t *state) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "   ", "  ");
     pet_stat_draw(pet_get()->happiness);
