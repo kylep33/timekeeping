@@ -89,7 +89,7 @@ static bool _note_sounding(const int8_t *sequence, uint16_t elapsed_ticks) {
  */
 static void _redraw(pet_sing_face_state_t *state) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "   ", "  ");
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+    pet_stat_draw(pet_get()->happiness);
 
     if (state->singing) {
         char row[PET_ROW_LENGTH + 1];

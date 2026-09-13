@@ -38,7 +38,9 @@
  * ALARM tap:   interact with it; after bedtime the first tap prods it awake instead
  * ALARM hold:  peek the time and date, the weekday trading places with the month each
  *              second; on a dead pet, hatch the next one
- * LIGHT hold:  step through hunger, happiness, health and age in the big digits
+ * LIGHT tap:   next page of hunger, happiness, health and age, then back to the pet;
+ *              the name in the big digits, its number along the top
+ * LIGHT hold:  backlight
  */
 
 #include "movement.h"
@@ -51,7 +53,6 @@ typedef struct {
     bool on_top_row;        ///< which of the pet's two strips it is ambling along
     uint8_t tick;
     uint8_t stat_page;
-    uint8_t stat_ticks;
     uint8_t reaction_ticks_left;
     pet_interact_kind_t reaction;
     uint8_t rise_ticks_left; ///< counts down while hopping up through the digit, then lands

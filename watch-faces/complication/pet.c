@@ -23,6 +23,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include "pet.h"
 #include "filesystem.h"
@@ -79,6 +80,9 @@ static const uint32_t SALT_ILLNESS = 3;
 
 static const uint8_t PET_FORMAT_VERSION = 2;
 static char PET_FILE_NAME[] = "pet.dat";
+
+// The top right has two digits, and a full 100 wrapping round to 0 read as an empty stat.
+static const uint8_t TOP_RIGHT_MAX = 99;
 
 // Close enough that the pet can tell what is coming, and rounds out in anticipation.
 static const uint8_t APPROACH_SWELL_DISTANCE = 2;
@@ -525,6 +529,13 @@ void pet_top_place(char *row, uint8_t position, const char *sprite) {
 void pet_top_draw(const char *row) {
     // The fallback drops the third cell, which is the one the classic LCD hasn't got.
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, row, row);
+}
+
+void pet_stat_draw(uint8_t stat) {
+    char buf[3];
+
+    snprintf(buf, sizeof(buf), "%2d", stat > TOP_RIGHT_MAX ? TOP_RIGHT_MAX : stat);
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
 }
 
 static uint8_t _prop_distance(const pet_approach_t *approach) {
