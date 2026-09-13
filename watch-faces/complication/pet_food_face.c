@@ -25,6 +25,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "pet_food_face.h"
+#include "pet_screen.h"
+#include "pet_species.h"
 #include "watch_common_display.h"
 
 // Four ticks per second, so the food crosses the row at a readable pace.
@@ -46,13 +48,23 @@ static const uint8_t NUM_FOODS = sizeof(FOODS) / sizeof(pet_food_t);
 
 static void _redraw(pet_food_face_state_t *state) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "EAT", "EA");
-    pet_stat_draw(pet_get()->hunger);
+    pet_screen_stat_draw(pet_get()->hunger);
 
-    if (state->serving.running) {
-        pet_approach_draw(&state->serving, FOODS[state->selection].sprite);
+    if (state->eating) {
+        pet_species_current()->eat_draw(FOODS[state->selection].sprite);
     } else {
+        watch_clear_colon();
         watch_display_text(WATCH_POSITION_BOTTOM, FOODS[state->selection].name);
     }
+}
+
+static void _advance(pet_food_face_state_t *state) {
+    if (!state->eating) return;
+
+    pet_eat_step_t step = pet_species_current()->eat_advance();
+
+    if (step == PET_EAT_SWALLOWED) pet_feed(FOODS[state->selection].nutrition);
+    if (step == PET_EAT_DONE) state->eating = false;
 }
 
 static void _select(pet_food_face_state_t *state) {
@@ -63,7 +75,8 @@ static void _select(pet_food_face_state_t *state) {
     // A midnight snack means getting it out of bed, which it charges you for.
     if (pet->asleep) pet_disturb();
 
-    pet_approach_start(&state->serving, pet_position());
+    pet_species_current()->eat_start();
+    state->eating = true;
 }
 
 void pet_food_face_setup(uint8_t watch_face_index, void ** context_ptr) {
@@ -77,7 +90,7 @@ void pet_food_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 void pet_food_face_activate(void *context) {
     pet_food_face_state_t *state = (pet_food_face_state_t *) context;
 
-    state->serving.running = false;
+    state->eating = false;
     movement_request_tick_frequency(TICK_FREQUENCY_HZ);
 }
 
@@ -90,15 +103,15 @@ bool pet_food_face_loop(movement_event_t event, void *context) {
             _redraw(state);
             break;
         case EVENT_TICK:
-            if (pet_approach_advance(&state->serving)) pet_feed(FOODS[state->selection].nutrition);
+            _advance(state);
             _redraw(state);
             break;
         case EVENT_ALARM_BUTTON_UP:
-            if (!state->serving.running) state->selection = (state->selection + 1) % NUM_FOODS;
+            if (!state->eating) state->selection = (state->selection + 1) % NUM_FOODS;
             _redraw(state);
             break;
         case EVENT_ALARM_LONG_PRESS:
-            if (!state->serving.running) _select(state);
+            if (!state->eating) _select(state);
             _redraw(state);
             break;
         case EVENT_TIMEOUT:

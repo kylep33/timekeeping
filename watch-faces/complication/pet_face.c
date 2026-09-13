@@ -26,19 +26,13 @@
 #include <stdio.h>
 #include <string.h>
 #include "pet_face.h"
+#include "pet_screen.h"
+#include "pet_species.h"
 #include "watch_common_display.h"
 #include "watch_utility.h"
 
 // Two ticks per second is enough for a creature that ambles rather than runs.
 static const uint8_t TICK_FREQUENCY_HZ = 2;
-
-static const uint8_t WANDER_CHOICES = 3;
-
-// Roughly one amble in eight is a step up or down rather than along.
-static const uint8_t CLIMB_ODDS = 8;
-
-// The off frame is a blink, so it should be a flicker rather than half the pet's life.
-static const uint8_t BLINK_EVERY_N_TICKS = 8;
 
 // The top right holds two digits, so later generations wrap.
 static const uint16_t TOP_RIGHT_WRAP = 100;
@@ -77,53 +71,6 @@ static uint16_t _stat_value(const pet_t *pet, pet_stat_t stat) {
     }
 }
 
-static bool _on_top_strip(pet_face_level_t level) {
-    return level == PET_FACE_LEVEL_TOP_LOW || level == PET_FACE_LEVEL_TOP_HIGH;
-}
-
-static bool _in_top_half(pet_face_level_t level) {
-    return level == PET_FACE_LEVEL_BOTTOM_HIGH || level == PET_FACE_LEVEL_TOP_HIGH;
-}
-
-static uint8_t _strip_length(pet_face_level_t level) {
-    return _on_top_strip(level) ? pet_top_row_length() : PET_ROW_LENGTH;
-}
-
-// The upper strip is shorter, so only some bottom row digits have a square above them.
-static bool _square_exists(int8_t level, int8_t column) {
-    if (level < 0 || level >= PET_FACE_LEVEL_COUNT || column < 0) return false;
-
-    return column + PET_SPRITE_WIDTH <= _strip_length(level);
-}
-
-/* Left, right or stay put, so the pet drifts about rather than marching wall to wall,
- * plus the odd step up or down. Walking into a square that isn't there is a no-op.
- */
-static void _wander(pet_face_state_t *state) {
-    int8_t level = state->level;
-    int8_t column = pet_position();
-
-    if (rand() % CLIMB_ODDS == 0) level += (rand() % 2 == 0) ? 1 : -1;
-    else column += (rand() % WANDER_CHOICES) - 1;
-
-    if (!_square_exists(level, column)) return;
-
-    state->level = level;
-    pet_set_position(column);
-}
-
-// Moods and reactions need the whole digit to read.
-static void _drop_to_bottom_half(pet_face_state_t *state) {
-    if (_in_top_half(state->level)) state->level--;
-}
-
-static uint8_t _frame_for(pet_mood_t mood, uint8_t tick) {
-    // A pet this close to death should be hard to ignore, so it flashes every tick.
-    if (mood == PET_MOOD_CRITICAL) return tick % PET_ANIMATION_FRAMES;
-
-    return (tick % BLINK_EVERY_N_TICKS == 0) ? 1 : 0;
-}
-
 static void _update_indicators(pet_mood_t mood) {
     bool needs_help = mood == PET_MOOD_HUNGRY || mood == PET_MOOD_SICK || mood == PET_MOOD_CRITICAL;
 
@@ -134,36 +81,9 @@ static void _update_indicators(pet_mood_t mood) {
     else watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
 }
 
-static const char *_current_sprite(pet_face_state_t *state, pet_mood_t mood) {
-    if (_in_top_half(state->level)) return pet_perch_sprite();
-    if (state->reaction_ticks_left > 0) return pet_interact_sprite(state->reaction, state->tick);
-
-    return pet_sprite(mood, _frame_for(mood, state->tick));
-}
-
-/* No label here: the creature is the screen, and the strip the name would sit on is
- * somewhere for it to go.
- */
-static void _display_pet(pet_face_state_t *state, pet_mood_t mood) {
-    char top[PET_TOP_ROW_LENGTH + 1];
-    char row[PET_ROW_LENGTH + 1];
-    const char *sprite = _current_sprite(state, mood);
-
-    watch_clear_colon();
-    pet_top_clear(top);
-    pet_row_clear(row);
-
-    if (_on_top_strip(state->level)) pet_top_place(top, pet_position(), sprite);
-    else pet_row_place(row, pet_position(), sprite);
-
-    pet_top_draw(top);
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
-    watch_display_text(WATCH_POSITION_BOTTOM, row);
-}
-
 static void _display_grave(void) {
     const pet_t *pet = pet_get();
-    char buf[PET_ROW_LENGTH + 1];
+    char buf[PET_SCREEN_BOTTOM_LENGTH + 1];
 
     watch_clear_colon();
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "RIP", "RP");
@@ -223,7 +143,7 @@ static void _redraw(pet_face_state_t *state) {
     if (state->peeking) _display_time();
     else if (state->showing_stats) _display_stats(state);
     else if (mood == PET_MOOD_DEAD) _display_grave();
-    else _display_pet(state, mood);
+    else pet_species_current()->home_draw(mood);
 }
 
 /* The pet counts as a page too, after the last stat, so the same tap that brings the
@@ -240,21 +160,11 @@ static void _next_stat_page(pet_face_state_t *state) {
     if (state->stat_page >= PET_STAT_COUNT) state->showing_stats = false;
 }
 
-static void _advance(pet_face_state_t *state, pet_mood_t mood) {
-    state->tick++;
-
+static void _advance(pet_face_state_t *state) {
     // Nobody can see the pet behind a stat, so it holds still until it's back on screen.
     if (state->showing_stats) return;
 
-    // Mid-reaction the pet holds still so there's something to actually look at.
-    if (state->reaction_ticks_left > 0) {
-        state->reaction_ticks_left--;
-        return;
-    }
-
-    // A sleeping, sick or dying pet stays put; only a comfortable one bothers moving.
-    if (mood == PET_MOOD_HAPPY || mood == PET_MOOD_HUNGRY) _wander(state);
-    else _drop_to_bottom_half(state);
+    pet_species_current()->home_advance(pet_mood());
 }
 
 static void _handle_hold(pet_face_state_t *state) {
@@ -266,14 +176,12 @@ static void _handle_hold(pet_face_state_t *state) {
     state->peeking = true;
 }
 
-static void _handle_interact(pet_face_state_t *state) {
+static void _handle_interact(void) {
     pet_interact_kind_t kind = pet_interact();
 
     if (kind == PET_INTERACT_COUNT) return;
 
-    _drop_to_bottom_half(state);
-    state->reaction = kind;
-    state->reaction_ticks_left = PET_FACE_REACTION_TICKS;
+    pet_species_current()->react(kind);
 }
 
 void pet_face_setup(uint8_t watch_face_index, void ** context_ptr) {
@@ -289,11 +197,7 @@ void pet_face_activate(void *context) {
 
     state->peeking = false;
     state->showing_stats = false;
-    state->reaction_ticks_left = 0;
-
-    uint8_t length = _strip_length(state->level);
-    if (pet_position() + PET_SPRITE_WIDTH > length) pet_set_position(length - PET_SPRITE_WIDTH);
-
+    pet_species_current()->home_activate();
     movement_request_tick_frequency(TICK_FREQUENCY_HZ);
 }
 
@@ -306,11 +210,11 @@ bool pet_face_loop(movement_event_t event, void *context) {
             _redraw(state);
             break;
         case EVENT_TICK:
-            _advance(state, pet_mood());
+            _advance(state);
             _redraw(state);
             break;
         case EVENT_ALARM_BUTTON_UP:
-            _handle_interact(state);
+            _handle_interact();
             _redraw(state);
             break;
         case EVENT_ALARM_LONG_PRESS:

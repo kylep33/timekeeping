@@ -25,11 +25,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "pet_play_face.h"
+#include "pet_screen.h"
 #include "watch_common_display.h"
 
 static void _redraw(pet_play_face_state_t *state) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "PLY", "PL");
-    pet_stat_draw(pet_get()->happiness);
+    pet_screen_stat_draw(pet_get()->happiness);
     watch_display_text(WATCH_POSITION_BOTTOM, pet_games[state->selection].name);
 }
 

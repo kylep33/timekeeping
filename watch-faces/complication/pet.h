@@ -29,11 +29,6 @@
 
 #define PET_STAT_MAX 100
 
-#define PET_ROW_LENGTH 6
-#define PET_TOP_ROW_LENGTH 3
-#define PET_SPRITE_WIDTH 1
-#define PET_ANIMATION_FRAMES 2
-
 typedef enum {
     PET_MOOD_HAPPY,
     PET_MOOD_HUNGRY,
@@ -76,6 +71,7 @@ typedef struct {
     uint16_t best_age_days;
     uint16_t rolled_on_day;         ///< day number of the most recent illness roll
     uint8_t version;
+    uint8_t species;                ///< a pet_species_id_t, stored as a byte since this is saved to flash
     uint8_t generation;
     uint8_t hunger;
     uint8_t happiness;
@@ -95,64 +91,8 @@ void pet_hatch(void);
 pet_mood_t pet_mood(void);
 uint16_t pet_age_days(void);
 
-/// @brief The current species' sprite for a mood, alternating with frame.
-const char *pet_sprite(pet_mood_t mood, uint8_t frame);
-
-/// @brief The mid-hop frame: low in the digit on the way up, or stretched tall just before landing.
-const char *pet_rise_sprite(bool stretched);
-
-/* Where the pet is standing, as a column shared by every face, so walking off one
- * screen and onto another leaves it where you left it. Which strip and which half of
- * the digit it is in is the home face's business, since nowhere else draws those.
- */
-uint8_t pet_position(void);
-void pet_set_position(uint8_t position);
-
-/// @brief How many cells the upper strip has on the LCD actually fitted.
-uint8_t pet_top_row_length(void);
-
-/// @brief Blanks a bottom row buffer, which must hold PET_ROW_LENGTH + 1 characters.
-void pet_row_clear(char *row);
-
-/// @brief Draws a sprite into a blanked row, clipping anything past the edge.
-void pet_row_place(char *row, uint8_t position, const char *sprite);
-
-/// @brief Blanks an upper strip buffer, which must hold PET_TOP_ROW_LENGTH + 1 characters.
-void pet_top_clear(char *row);
-
-/// @brief Draws a sprite into a blanked upper strip, clipping anything past the edge.
-void pet_top_place(char *row, uint8_t position, const char *sprite);
-
-/// @brief Puts a prepared upper strip on screen, using whatever cells the LCD has.
-void pet_top_draw(const char *row);
-
-/// @brief Puts a stat in the top right, showing a full 100 as 99 rather than wrapping to 0.
-void pet_stat_draw(uint8_t stat);
-
-/// @brief The stages of a feeding, in the order they play.
-typedef enum {
-    PET_APPROACH_WALKING,
-    PET_APPROACH_INCOMING,
-    PET_APPROACH_MOUTH,
-    PET_APPROACH_SETTLING,
-} pet_approach_phase_t;
-
-typedef struct {
-    uint8_t pet_position;
-    uint8_t prop_position;
-    uint8_t phase_ticks;
-    pet_approach_phase_t phase;
-    bool running;
-} pet_approach_t;
-
-/// @brief Starts a feeding: the pet heads for the left edge from wherever it was standing.
-void pet_approach_start(pet_approach_t *approach, uint8_t pet_position);
-
-/// @brief Steps the animation on. Returns true on the single tick the food goes down.
-bool pet_approach_advance(pet_approach_t *approach);
-
-/// @brief Draws the pet, and the prop while it is still on its way over.
-void pet_approach_draw(const pet_approach_t *approach, const char *prop);
+/// @brief Which pet_species_id_t is alive, without settling its needs.
+uint8_t pet_species_id(void);
 
 void pet_feed(uint8_t nutrition);
 
@@ -162,15 +102,6 @@ void pet_sing(void);
 /// @brief Nudges the awake pet with a random interaction, or scolds you for waking it.
 /// @return which interaction played, or PET_INTERACT_COUNT if the pet did nothing.
 pet_interact_kind_t pet_interact(void);
-
-/// @brief The current species' reaction sprite for an interaction, alternating with frame.
-const char *pet_interact_sprite(pet_interact_kind_t kind, uint8_t frame);
-
-/// @brief The current species' sprite for the top half of a digit.
-const char *pet_perch_sprite(void);
-
-/// @brief The current species' singing mouth: shut, then hinged open, alternating with frame.
-const char *pet_sing_sprite(uint8_t frame);
 
 /// @brief Prods the sleeping pet awake for a few minutes, at the cost of its mood.
 void pet_disturb(void);

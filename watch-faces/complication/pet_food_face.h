@@ -42,7 +42,7 @@
 
 typedef struct {
     uint8_t selection;
-    pet_approach_t serving;
+    bool eating;
 } pet_food_face_state_t;
 
 void pet_food_face_setup(uint8_t watch_face_index, void ** context_ptr);
