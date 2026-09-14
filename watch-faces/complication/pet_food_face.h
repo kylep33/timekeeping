@@ -35,14 +35,27 @@
  *
  * ALARM tap:   next item on the menu
  * ALARM hold:  feed it the item on screen, getting it out of bed if it is asleep
+ *
+ * The last item is a gun. Holding on it asks KILL PET?, then holding ALARM for five
+ * seconds, with a beep each second, has it shot. Letting go early starts the count
+ * over, and a tap backs out to the menu.
  */
 
 #include "movement.h"
 #include "pet.h"
 
+typedef enum {
+    PET_FOOD_FACE_MENU,
+    PET_FOOD_FACE_EATING,
+    PET_FOOD_FACE_CONFIRMING,
+    PET_FOOD_FACE_MURDERING,
+} pet_food_face_mode_t;
+
 typedef struct {
     uint8_t selection;
-    bool eating;
+    uint8_t hold_ticks;
+    bool holding;
+    pet_food_face_mode_t mode;
 } pet_food_face_state_t;
 
 void pet_food_face_setup(uint8_t watch_face_index, void ** context_ptr);

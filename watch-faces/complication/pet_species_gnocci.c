@@ -75,6 +75,21 @@ static const char MOUTH_SPRITE[] = "C";
 static const char SING_SHUT_SPRITE[] = "o";
 static const char SING_OPEN_SPRITE[] = "v";
 
+// Far enough that the bullet visibly travels.
+static const uint8_t SHOOT_DISTANCE = 3;
+static const uint8_t AIM_TICKS = 4;
+static const uint8_t SCREAM_TICKS = 6;
+static const uint8_t DEAD_TICKS = 4;
+
+// A 7 is an arm pointing left off the top of a body, and an F is the same pointing right.
+static const char GUY_WALKING_SPRITE[] = "Y";
+static const char GUY_AIMING_LEFT_SPRITE[] = "7";
+static const char GUY_AIMING_RIGHT_SPRITE[] = "F";
+static const char BULLET_SPRITE[] = "-";
+static const char SHOCKED_SPRITE[] = "O";
+static const char *SCREAM_SPRITES[FRAME_COUNT] = { "O", "8" };
+static const char DEAD_SPRITE[] = "_";
+
 typedef enum {
     EAT_PHASE_WALKING,
     EAT_PHASE_INCOMING,
@@ -88,12 +103,29 @@ typedef struct {
     eat_phase_t phase;
 } eat_t;
 
+typedef enum {
+    MURDER_PHASE_ENTERING,
+    MURDER_PHASE_AIMING,
+    MURDER_PHASE_FIRING,
+    MURDER_PHASE_SCREAMING,
+    MURDER_PHASE_DEAD,
+} murder_phase_t;
+
+typedef struct {
+    uint8_t guy_column;
+    uint8_t bullet_column;
+    uint8_t phase_ticks;
+    int8_t direction;   ///< which way the guy and his bullet travel, -1 is left
+    murder_phase_t phase;
+} murder_t;
+
 // Where it wanders is worth nobody's flash, so it starts mid row each boot.
 static pet_grid_spot_t _spot = { PET_GRID_LEVEL_BOTTOM_LOW, PET_SCREEN_BOTTOM_LENGTH / 2 };
 static uint8_t _tick;
 static uint8_t _reaction_ticks_left;
 static pet_interact_kind_t _reaction;
 static eat_t _eat;
+static murder_t _murder;
 
 // Left, right or stay put, so it drifts about rather than marching wall to wall.
 static void _wander(void) {
@@ -233,6 +265,88 @@ static void _sing_draw(bool mouth_open) {
     watch_display_text(WATCH_POSITION_BOTTOM, bottom);
 }
 
+static uint8_t _distance(uint8_t from, uint8_t to) {
+    return from > to ? from - to : to - from;
+}
+
+static void _murder_enter(murder_phase_t phase) {
+    _murder.phase = phase;
+    _murder.phase_ticks = 0;
+}
+
+// He comes in from whichever side has more room, so there's space to shoot across.
+static void _murder_start(void) {
+    bool from_right = _spot.column < PET_SCREEN_BOTTOM_LENGTH / 2;
+
+    _murder.direction = from_right ? -1 : 1;
+    _murder.guy_column = from_right ? PET_SCREEN_BOTTOM_LENGTH - 1 : 0;
+    _murder_enter(MURDER_PHASE_ENTERING);
+}
+
+static pet_anim_step_t _murder_advance(void) {
+    _murder.phase_ticks++;
+
+    switch (_murder.phase) {
+        case MURDER_PHASE_ENTERING:
+            if (_distance(_murder.guy_column, _spot.column) > SHOOT_DISTANCE) _murder.guy_column += _murder.direction;
+            else _murder_enter(MURDER_PHASE_AIMING);
+            break;
+        case MURDER_PHASE_AIMING:
+            if (_murder.phase_ticks < AIM_TICKS) break;
+
+            _murder.bullet_column = _murder.guy_column + _murder.direction;
+            _murder_enter(MURDER_PHASE_FIRING);
+            break;
+        case MURDER_PHASE_FIRING:
+            if (_distance(_murder.bullet_column, _spot.column) > 1) {
+                _murder.bullet_column += _murder.direction;
+                break;
+            }
+
+            _murder_enter(MURDER_PHASE_SCREAMING);
+            return PET_ANIM_IMPACT;
+        case MURDER_PHASE_SCREAMING:
+            if (_murder.phase_ticks >= SCREAM_TICKS) _murder_enter(MURDER_PHASE_DEAD);
+            break;
+        case MURDER_PHASE_DEAD:
+            if (_murder.phase_ticks >= DEAD_TICKS) return PET_ANIM_DONE;
+            break;
+    }
+
+    return PET_ANIM_PLAYING;
+}
+
+static const char *_murder_pet_sprite(void) {
+    switch (_murder.phase) {
+        case MURDER_PHASE_ENTERING:
+            return MOOD_SPRITES[pet_mood()][_murder.phase_ticks % FRAME_COUNT];
+        case MURDER_PHASE_AIMING:
+        case MURDER_PHASE_FIRING:
+            return SHOCKED_SPRITE;
+        case MURDER_PHASE_SCREAMING:
+            return SCREAM_SPRITES[_murder.phase_ticks % FRAME_COUNT];
+        default:
+            return DEAD_SPRITE;
+    }
+}
+
+static const char *_guy_sprite(void) {
+    if (_murder.phase == MURDER_PHASE_ENTERING) return GUY_WALKING_SPRITE;
+
+    return _murder.direction < 0 ? GUY_AIMING_LEFT_SPRITE : GUY_AIMING_RIGHT_SPRITE;
+}
+
+static void _murder_draw(void) {
+    char bottom[PET_SCREEN_BOTTOM_LENGTH + 1];
+
+    pet_screen_bottom_clear(bottom);
+    pet_screen_bottom_place(bottom, _spot.column, _murder_pet_sprite());
+    pet_screen_bottom_place(bottom, _murder.guy_column, _guy_sprite());
+    if (_murder.phase == MURDER_PHASE_FIRING) pet_screen_bottom_place(bottom, _murder.bullet_column, BULLET_SPRITE);
+
+    watch_display_text(WATCH_POSITION_BOTTOM, bottom);
+}
+
 const pet_species_t pet_species_gnocci = {
     .override_settings = NULL,
     .home_activate = _home_activate,
@@ -244,4 +358,7 @@ const pet_species_t pet_species_gnocci = {
     .eat_draw = _eat_draw,
     .sing_start = _sing_start,
     .sing_draw = _sing_draw,
+    .murder_start = _murder_start,
+    .murder_advance = _murder_advance,
+    .murder_draw = _murder_draw,
 };

@@ -38,6 +38,7 @@ typedef struct {
     int8_t *sleeping;
     int8_t *waking;
     int8_t *died;
+    int8_t *murdered;
 } pet_sounds_t;
 
 typedef struct {
