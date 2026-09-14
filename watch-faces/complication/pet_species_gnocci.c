@@ -167,7 +167,7 @@ static void _eat_start(void) {
     _eat_enter(EAT_PHASE_WALKING);
 }
 
-static pet_eat_step_t _eat_advance(void) {
+static pet_anim_step_t _eat_advance(void) {
     _eat.phase_ticks++;
 
     switch (_eat.phase) {
@@ -183,16 +183,16 @@ static pet_eat_step_t _eat_advance(void) {
             }
 
             _eat_enter(EAT_PHASE_MOUTH);
-            return PET_EAT_SWALLOWED;
+            return PET_ANIM_IMPACT;
         case EAT_PHASE_MOUTH:
             if (_eat.phase_ticks >= MOUTH_TICKS) _eat_enter(EAT_PHASE_SETTLING);
             break;
         case EAT_PHASE_SETTLING:
-            if (_eat.phase_ticks >= SETTLE_TICKS) return PET_EAT_DONE;
+            if (_eat.phase_ticks >= SETTLE_TICKS) return PET_ANIM_DONE;
             break;
     }
 
-    return PET_EAT_PLAYING;
+    return PET_ANIM_PLAYING;
 }
 
 static const char *_eat_sprite(void) {
