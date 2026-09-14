@@ -61,10 +61,10 @@ static void _redraw(pet_food_face_state_t *state) {
 static void _advance(pet_food_face_state_t *state) {
     if (!state->eating) return;
 
-    pet_eat_step_t step = pet_species_current()->eat_advance();
+    pet_anim_step_t step = pet_species_current()->eat_advance();
 
-    if (step == PET_EAT_SWALLOWED) pet_feed(FOODS[state->selection].nutrition);
-    if (step == PET_EAT_DONE) state->eating = false;
+    if (step == PET_ANIM_IMPACT) pet_feed(FOODS[state->selection].nutrition);
+    if (step == PET_ANIM_DONE) state->eating = false;
 }
 
 static void _select(pet_food_face_state_t *state) {

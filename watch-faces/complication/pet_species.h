@@ -47,10 +47,10 @@ typedef enum {
 } pet_species_id_t;
 
 typedef enum {
-    PET_EAT_PLAYING,
-    PET_EAT_SWALLOWED,  ///< the one tick the food goes down
-    PET_EAT_DONE,
-} pet_eat_step_t;
+    PET_ANIM_PLAYING,
+    PET_ANIM_IMPACT,    ///< the one tick it lands, like the food going down
+    PET_ANIM_DONE,
+} pet_anim_step_t;
 
 /* home_draw owns the whole screen. eat_draw and sing_draw run after the face has put
  * up its title and stat, and can draw over them.
@@ -65,7 +65,7 @@ typedef struct {
     void (*react)(pet_interact_kind_t kind);
 
     void (*eat_start)(void);
-    pet_eat_step_t (*eat_advance)(void);
+    pet_anim_step_t (*eat_advance)(void);
     void (*eat_draw)(const char *food);
 
     void (*sing_start)(void);
