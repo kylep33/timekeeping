@@ -73,25 +73,26 @@ static int8_t _tune_died[] = {
     0
 };
 
-// A shriek that warbles down and gives out in a gurgle.
+/* A shriek that flutters between clashing notes rather than a clean scale, then
+ * collapses through a chromatic fall into a long, low groan.
+ */
 static int8_t _tune_murdered[] = {
+    BUZZER_NOTE_C8, 2,
+    BUZZER_NOTE_B7, 2,
+    BUZZER_NOTE_C8, 2,
+    BUZZER_NOTE_A7SHARP_B7FLAT, 2,
+    BUZZER_NOTE_C8, 2,
+    BUZZER_NOTE_B7, 2,
     BUZZER_NOTE_A7, 3,
-    BUZZER_NOTE_C8, 3,
-    BUZZER_NOTE_A7, 3,
-    BUZZER_NOTE_C8, 3,
-    BUZZER_NOTE_G7, 3,
-    BUZZER_NOTE_A7SHARP_B7FLAT, 3,
-    BUZZER_NOTE_F7, 3,
-    BUZZER_NOTE_G7SHARP_A7FLAT, 3,
+    BUZZER_NOTE_F7SHARP_G7FLAT, 3,
     BUZZER_NOTE_D7, 4,
-    BUZZER_NOTE_F7, 4,
-    BUZZER_NOTE_B6, 5,
-    BUZZER_NOTE_D7, 5,
-    BUZZER_NOTE_F6, 8,
-    BUZZER_NOTE_REST, 4,
-    BUZZER_NOTE_C4, 6,
+    BUZZER_NOTE_C7SHARP_D7FLAT, 4,
+    BUZZER_NOTE_A6, 5,
     BUZZER_NOTE_REST, 3,
-    BUZZER_NOTE_A3, 20,
+    BUZZER_NOTE_D4, 6,
+    BUZZER_NOTE_C4SHARP_D4FLAT, 8,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_A2, 30,
     0
 };
 
