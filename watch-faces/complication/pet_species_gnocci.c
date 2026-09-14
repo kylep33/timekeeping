@@ -75,16 +75,21 @@ static const char MOUTH_SPRITE[] = "C";
 static const char SING_SHUT_SPRITE[] = "o";
 static const char SING_OPEN_SPRITE[] = "v";
 
-// Far enough that the bullet visibly travels.
-static const uint8_t SHOOT_DISTANCE = 3;
+/* Always the same scene, so it plays the same every time: the pet snaps to the right
+ * edge, and he walks in from the left, stopping well short so the shot has most of
+ * the row to cross.
+ */
+static const uint8_t MURDER_SPOT_COLUMN = PET_SCREEN_BOTTOM_LENGTH - 1;
+static const uint8_t GUY_ENTER_COLUMN = 0;
+static const uint8_t GUY_STOP_COLUMN = 1;
+
 static const uint8_t AIM_TICKS = 4;
 static const uint8_t SCREAM_TICKS = 6;
 static const uint8_t DEAD_TICKS = 4;
 
-// A 7 is an arm pointing left off the top of a body, and an F is the same pointing right.
+// F: a vertical grip with the barrel and trigger guard sticking out to the right.
 static const char GUY_WALKING_SPRITE[] = "Y";
-static const char GUY_AIMING_LEFT_SPRITE[] = "7";
-static const char GUY_AIMING_RIGHT_SPRITE[] = "F";
+static const char GUY_AIMING_SPRITE[] = "F";
 static const char BULLET_SPRITE[] = "-";
 static const char SHOCKED_SPRITE[] = "O";
 static const char *SCREAM_SPRITES[FRAME_COUNT] = { "O", "8" };
@@ -115,7 +120,6 @@ typedef struct {
     uint8_t guy_column;
     uint8_t bullet_column;
     uint8_t phase_ticks;
-    int8_t direction;   ///< which way the guy and his bullet travel, -1 is left
     murder_phase_t phase;
 } murder_t;
 
@@ -274,12 +278,9 @@ static void _murder_enter(murder_phase_t phase) {
     _murder.phase_ticks = 0;
 }
 
-// He comes in from whichever side has more room, so there's space to shoot across.
 static void _murder_start(void) {
-    bool from_right = _spot.column < PET_SCREEN_BOTTOM_LENGTH / 2;
-
-    _murder.direction = from_right ? -1 : 1;
-    _murder.guy_column = from_right ? PET_SCREEN_BOTTOM_LENGTH - 1 : 0;
+    _spot.column = MURDER_SPOT_COLUMN;
+    _murder.guy_column = GUY_ENTER_COLUMN;
     _murder_enter(MURDER_PHASE_ENTERING);
 }
 
@@ -288,18 +289,19 @@ static pet_anim_step_t _murder_advance(void) {
 
     switch (_murder.phase) {
         case MURDER_PHASE_ENTERING:
-            if (_distance(_murder.guy_column, _spot.column) > SHOOT_DISTANCE) _murder.guy_column += _murder.direction;
+            if (_murder.guy_column < GUY_STOP_COLUMN) _murder.guy_column++;
             else _murder_enter(MURDER_PHASE_AIMING);
             break;
         case MURDER_PHASE_AIMING:
             if (_murder.phase_ticks < AIM_TICKS) break;
 
-            _murder.bullet_column = _murder.guy_column + _murder.direction;
+            // The barrel is already poking out a cell ahead; firing just sends it flying.
+            _murder.bullet_column = _murder.guy_column + 1;
             _murder_enter(MURDER_PHASE_FIRING);
             break;
         case MURDER_PHASE_FIRING:
             if (_distance(_murder.bullet_column, _spot.column) > 1) {
-                _murder.bullet_column += _murder.direction;
+                _murder.bullet_column++;
                 break;
             }
 
@@ -331,9 +333,7 @@ static const char *_murder_pet_sprite(void) {
 }
 
 static const char *_guy_sprite(void) {
-    if (_murder.phase == MURDER_PHASE_ENTERING) return GUY_WALKING_SPRITE;
-
-    return _murder.direction < 0 ? GUY_AIMING_LEFT_SPRITE : GUY_AIMING_RIGHT_SPRITE;
+    return _murder.phase == MURDER_PHASE_ENTERING ? GUY_WALKING_SPRITE : GUY_AIMING_SPRITE;
 }
 
 static void _murder_draw(void) {
@@ -342,6 +342,9 @@ static void _murder_draw(void) {
     pet_screen_bottom_clear(bottom);
     pet_screen_bottom_place(bottom, _spot.column, _murder_pet_sprite());
     pet_screen_bottom_place(bottom, _murder.guy_column, _guy_sprite());
+
+    // Ready during the aim, then the same dash flies on as the shot.
+    if (_murder.phase == MURDER_PHASE_AIMING) pet_screen_bottom_place(bottom, _murder.guy_column + 1, BULLET_SPRITE);
     if (_murder.phase == MURDER_PHASE_FIRING) pet_screen_bottom_place(bottom, _murder.bullet_column, BULLET_SPRITE);
 
     watch_display_text(WATCH_POSITION_BOTTOM, bottom);

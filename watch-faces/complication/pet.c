@@ -46,7 +46,7 @@ static const uint32_t SALT_ILLNESS = 3;
 static const uint8_t PET_FORMAT_VERSION = 3;
 static char PET_FILE_NAME[] = "pet.dat";
 
-static const pet_species_id_t HATCH_SPECIES = PET_SPECIES_GNOCCI;
+static const pet_species_id_t HATCH_SPECIES = PET_SPECIES_SMILEY;
 
 typedef enum {
     PET_CALL_NONE,
