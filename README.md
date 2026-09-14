@@ -46,10 +46,17 @@ something looks wrong. Note that each build has its own output directory, and
 Needs [emscripten](https://emscripten.org/).
 
 ```sh
-emmake make BOARD=sensorwatch_pro DISPLAY=custom
+CFLAGS=-g emmake make BOARD=sensorwatch_pro DISPLAY=custom
 python3 -m http.server -d build-sim
 # -> http://localhost:8000/firmware.html
 ```
+
+`CFLAGS=-g` keeps debug info so emcc skips its wasm-opt/objcopy stripping
+pass. Without it, this machine's emscripten (the outdated apt package,
+paired with a binaryen that doesn't match) crashes partway through that
+pass and leaves `firmware.wasm` truncated - the page then hangs forever on
+"Preparing... (0/1)" since it never finishes loading a broken wasm file. If
+that happens, `emmake make clean` and rebuild with the flag above.
 
 Browsers cache `firmware.wasm` hard, and `http.server` sends nothing to stop
 them, so a plain reload can keep running the previous build long after a
