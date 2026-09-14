@@ -73,6 +73,28 @@ static int8_t _tune_died[] = {
     0
 };
 
+// A shriek that warbles down and gives out in a gurgle.
+static int8_t _tune_murdered[] = {
+    BUZZER_NOTE_A7, 3,
+    BUZZER_NOTE_C8, 3,
+    BUZZER_NOTE_A7, 3,
+    BUZZER_NOTE_C8, 3,
+    BUZZER_NOTE_G7, 3,
+    BUZZER_NOTE_A7SHARP_B7FLAT, 3,
+    BUZZER_NOTE_F7, 3,
+    BUZZER_NOTE_G7SHARP_A7FLAT, 3,
+    BUZZER_NOTE_D7, 4,
+    BUZZER_NOTE_F7, 4,
+    BUZZER_NOTE_B6, 5,
+    BUZZER_NOTE_D7, 5,
+    BUZZER_NOTE_F6, 8,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_C4, 6,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_A3, 20,
+    0
+};
+
 static int8_t _tune_eat[] = {
     BUZZER_NOTE_C6, 3,
     BUZZER_NOTE_REST, 2,
@@ -139,5 +161,6 @@ const pet_settings_t pet_default_settings = {
         .sleeping = _tune_sleeping,
         .waking = _tune_waking,
         .died = _tune_died,
+        .murdered = _tune_murdered,
     },
 };

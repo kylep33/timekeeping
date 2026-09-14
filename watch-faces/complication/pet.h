@@ -103,6 +103,9 @@ void pet_sing(void);
 /// @return which interaction played, or PET_INTERACT_COUNT if the pet did nothing.
 pet_interact_kind_t pet_interact(void);
 
+/// @brief Kills it on the spot. A normal death, but it screams instead of the usual death call.
+void pet_murder(void);
+
 /// @brief Prods the sleeping pet awake for a few minutes, at the cost of its mood.
 void pet_disturb(void);
 

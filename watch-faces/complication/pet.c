@@ -326,6 +326,17 @@ void pet_sing(void) {
     _save();
 }
 
+void pet_murder(void) {
+    _settle();
+    if (_pet.dead) return;
+
+    _pet.dead = true;
+    // Anything it was about to call out would play over its own scream.
+    _pending_call = PET_CALL_NONE;
+    movement_play_sequence(_settings.sounds.murdered, BUZZER_PRIORITY_BUTTON);
+    _save();
+}
+
 // Prodding is what shakes an illness off, and it takes more than one go.
 static void _poke(void) {
     _pet.happiness = _raise(_pet.happiness, _settings.poke_happiness_gain);

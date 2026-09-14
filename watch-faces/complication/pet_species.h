@@ -52,8 +52,8 @@ typedef enum {
     PET_ANIM_DONE,
 } pet_anim_step_t;
 
-/* home_draw owns the whole screen. eat_draw and sing_draw run after the face has put
- * up its title and stat, and can draw over them.
+/* home_draw owns the whole screen. The other draws run after the face has put up its
+ * title and stat, and can draw over them.
  */
 typedef struct {
     /// @brief Changes whichever defaults this species does differently. NULL keeps them all.
@@ -70,6 +70,11 @@ typedef struct {
 
     void (*sing_start)(void);
     void (*sing_draw)(bool mouth_open);
+
+    /// @brief A little guy walks in and shoots it. IMPACT is the shot landing.
+    void (*murder_start)(void);
+    pet_anim_step_t (*murder_advance)(void);
+    void (*murder_draw)(void);
 } pet_species_t;
 
 extern const pet_species_t pet_species_gnocci;
