@@ -39,24 +39,30 @@ int8_t signal_tune_birthday[] = {
     0
 };
 
-/* The steel guitar riff between verses, an octave up to suit the piezo. Slides and bends
- * are a short grace note into the one they land on. 6/8, an eighth is about 21 ticks.
+/* Terry Clements' intro riff, measures 1-8 of Songsterr's transcription of the record
+ * (song 36755, lead guitar), an octave up to suit the piezo. 6/8 at 93 bpm, so an eighth
+ * is 21 ticks. Bends are a short grace note into the pitch they reach, and a note too
+ * long for one duration is split in two.
  */
 int8_t signal_tune_edmund_fitzgerald[] = {
-    BUZZER_NOTE_B5, 40, BUZZER_NOTE_REST, 2,
-    BUZZER_NOTE_B5, 6, BUZZER_NOTE_C6SHARP_D6FLAT, 36,
-    BUZZER_NOTE_B5, 21,
-    BUZZER_NOTE_A5, 63, BUZZER_NOTE_REST, 12,
-    BUZZER_NOTE_F5SHARP_G5FLAT, 19, BUZZER_NOTE_REST, 2,
-    BUZZER_NOTE_F5SHARP_G5FLAT, 19, BUZZER_NOTE_REST, 2,
-    BUZZER_NOTE_F5SHARP_G5FLAT, 21,
+    // B, hammer on to C#, back to B
+    BUZZER_NOTE_B5, 60, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_B5, 21, BUZZER_NOTE_C6SHARP_D6FLAT, 21, BUZZER_NOTE_B5, 20,
+    // A, then F# picked three times, into G#
+    BUZZER_NOTE_A5, 21,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 29, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 8, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 41,
     BUZZER_NOTE_G5SHARP_A5FLAT, 19, BUZZER_NOTE_REST, 2,
-    BUZZER_NOTE_G5SHARP_A5FLAT, 6, BUZZER_NOTE_A5, 36,
-    BUZZER_NOTE_G5SHARP_A5FLAT, 21,
-    BUZZER_NOTE_F5SHARP_G5FLAT, 21,
+    // G# bent up to A and let back down, F#, E
+    BUZZER_NOTE_G5SHARP_A5FLAT, 10, BUZZER_NOTE_A5, 57, BUZZER_NOTE_G5SHARP_A5FLAT, 15,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 21, BUZZER_NOTE_E5, 21,
+    // F# held two bars
+    BUZZER_NOTE_F5SHARP_G5FLAT, 124, BUZZER_NOTE_F5SHARP_G5FLAT, 124,
+    // F# bent up to G# and let back down, E
+    BUZZER_NOTE_F5SHARP_G5FLAT, 10, BUZZER_NOTE_G5SHARP_A5FLAT, 78, BUZZER_NOTE_F5SHARP_G5FLAT, 15,
     BUZZER_NOTE_E5, 21,
-    BUZZER_NOTE_F5SHARP_G5FLAT, 63,
-    // a breath before it loops
-    BUZZER_NOTE_REST, 32,
+    // F#, held out to the end of the next bar
+    BUZZER_NOTE_F5SHARP_G5FLAT, 124, BUZZER_NOTE_F5SHARP_G5FLAT, 124,
     0
 };
