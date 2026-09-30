@@ -58,7 +58,7 @@ typedef struct {
  */
 
 // Mostly just looking, with the odd blink and a grin now and then.
-static const smiley_frame_t HAPPY_FRAMES[] = { { "#__#", 10 }, { "-__-", 1 }, { "#__#", 12 }, { "^__^", 6 } };
+static const smiley_frame_t HAPPY_FRAMES[] = { { "#__#", 6 }, { "-__-", 2 }, { "#__#", 6 }, { "^__^", 6 } };
 static const smiley_frame_t HUNGRY_FRAMES[] = { { "#__#", 2 }, { "#<>#", 2 } };
 static const smiley_frame_t TIRED_FRAMES[] = { { "o__0", 4 }, { "0__o", 4 }, { "-__-", 3 } };
 static const smiley_frame_t SAD_FRAMES[] = { { "o__o", 8 }, { "____", 1 } };
