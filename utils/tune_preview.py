@@ -9,6 +9,10 @@ array, so a build carries all of them at once. Rather than doing a clean
 rebuild per tune just to hear it, this reimplements the firmware's sequence
 player on the host.
 
+Special tunes in movement_custom_signal_tunes_special.c are rendered too, named
+SPECIAL_<name>. They sit outside signal_tunes, so there is no table to go by;
+every array in that file counts.
+
 The playback semantics mirror cb_watch_buzzer_seq() in
 watch-library/hardware/watch/watch_tcc.c, which is driven by a 64 Hz timer, so
 one duration unit is 15.625 ms. Note frequencies are read out of the doc
@@ -19,6 +23,7 @@ Usage:
     utils/tune_preview.py                      # render every tune
     utils/tune_preview.py --list
     utils/tune_preview.py --only KIM_POSSIBLE MARIO_THEME
+    utils/tune_preview.py --only SPECIAL_BIRTHDAY
     utils/tune_preview.py --combined           # plus one back-to-back file
 """
 
@@ -32,6 +37,8 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 TUNES_H = REPO / "movement_custom_signal_tunes.h"
+SPECIAL_TUNES_C = REPO / "movement_custom_signal_tunes_special.c"
+SPECIAL_PREFIX = "SPECIAL_"
 NOTES_H = REPO / "watch-library" / "shared" / "watch" / "watch_tcc.h"
 
 # cb_watch_buzzer_seq() runs off a 64 Hz timer; one duration unit is one tick.
@@ -135,6 +142,28 @@ def parse_tunes(path, notes):
     return tunes
 
 
+def parse_special_tunes(path, notes):
+    """Map SPECIAL_<name> -> flat [value, duration, ...] list for every array in path."""
+    if not path.exists():
+        sys.exit(f"could not find {path}; special tunes live there alongside the signal tunes")
+
+    tunes = {}
+    for varname, body in re.findall(
+        r"^int8_t signal_tune_(\w+)\[\]\s*=\s*\{(.*?)\};", path.read_text(), re.S | re.M
+    ):
+        tunes[SPECIAL_PREFIX + varname.upper()] = _parse_array_body(body, notes, varname)
+    return tunes
+
+
+def tune_order(name):
+    """Signal tunes first, then specials, each alphabetical."""
+    return (name.startswith(SPECIAL_PREFIX), name)
+
+
+def display_name(name):
+    return name if name.startswith(SPECIAL_PREFIX) else f"SIGNAL_TUNE_{name}"
+
+
 def run_sequence(seq):
     """Walk a tune the way cb_watch_buzzer_seq() does, yielding (note, ticks).
 
@@ -216,7 +245,7 @@ def main():
     )
     ap.add_argument("--list", action="store_true", help="list tunes and exit")
     ap.add_argument("--only", nargs="+", metavar="NAME",
-                    help="render only these tunes (name without SIGNAL_TUNE_)")
+                    help="render only these tunes (name without SIGNAL_TUNE_, or SPECIAL_<name>)")
     ap.add_argument("--combined", action="store_true",
                     help="also write all-tunes.wav with every tune back to back")
     ap.add_argument("--volume", choices=sorted(VOLUME_AMPLITUDE), default="loud",
@@ -232,20 +261,21 @@ def main():
 
     notes = parse_notes(NOTES_H)
     tunes = parse_tunes(TUNES_H, notes)
+    tunes.update(parse_special_tunes(SPECIAL_TUNES_C, notes))
     index_to_freq = {i: hz for i, hz in notes.values() if hz is not None}
 
     if args.list:
-        for name in sorted(tunes):
+        for name in sorted(tunes, key=tune_order):
             ticks = sum(t for _, t in run_sequence(tunes[name]))
-            print(f"  SIGNAL_TUNE_{name:<20} {ticks * args.tick_ms / 1000:5.2f}s")
+            print(f"  {display_name(name):<32} {ticks * args.tick_ms / 1000:5.2f}s")
         return
 
-    selected = sorted(tunes)
+    selected = sorted(tunes, key=tune_order)
     if args.only:
         unknown = [n for n in args.only if n.upper() not in tunes]
         if unknown:
             sys.exit(f"unknown tune(s): {', '.join(unknown)}\n"
-                     f"available: {', '.join(sorted(tunes))}")
+                     f"available: {', '.join(sorted(tunes, key=tune_order))}")
         selected = [n.upper() for n in args.only]
 
     args.outdir.mkdir(parents=True, exist_ok=True)
