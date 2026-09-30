@@ -23,6 +23,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "advanced_alarm_face.h"
@@ -36,18 +37,48 @@ typedef enum {
     alarm_setting_idx_day,
     alarm_setting_idx_hour,
     alarm_setting_idx_minute,
-    alarm_setting_idx_pitch,
-    alarm_setting_idx_beeps
+    alarm_setting_idx_tune
 } alarm_setting_idx_t;
 
 static const char _dow_strings_classic[ALARM_DAY_STATES + 1][2] ={"AL",  "MO",  "TU",  "WE",  "TH",  "FR",  "SA",  "SU",  "ED",  "1t",  "MF",  "WN"};
 static const char _dow_strings_custom[ALARM_DAY_STATES + 1][3] ={ "AL ", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN", "DAY", "1t ", "M-F", "WKD"};
-static const uint8_t _beeps_blink_idx = 9;
-static const watch_buzzer_note_t _buzzer_notes[3] = {BUZZER_NOTE_B6, BUZZER_NOTE_C8, BUZZER_NOTE_A8};
 
-// Volume is indicated by the three segments 5D, 5G and 5A
-// This mapping is for classic LCD; if custom LCD is in use, we change it in the setup function.
-static uint8_t _buzzer_segdata[3][2] = {{0, 3}, {1, 3}, {2, 2}};
+_Static_assert(ALARM_TUNE_COUNT <= 32, "alarm_setting_t.tune is 5 bits, widen it to fit every signal tune");
+
+static const uint16_t ALARM_RING_S = 30;
+static const uint16_t BUZZER_TICKS_PER_S = 64;
+#define ALARM_TUNE_MAX_NOTES 120
+static const uint8_t NEW_ALARM_TUNE = ALARM_TUNE_RANDOM;
+
+static const bool USE_HOLIDAY_ALARMS = true;
+
+static int8_t _tune_birthday[] = {
+    BUZZER_NOTE_G5, 10, BUZZER_NOTE_REST, 2, BUZZER_NOTE_G5, 4,
+    BUZZER_NOTE_A5, 16, BUZZER_NOTE_G5, 16, BUZZER_NOTE_C6, 16, BUZZER_NOTE_B5, 32,
+    BUZZER_NOTE_G5, 10, BUZZER_NOTE_REST, 2, BUZZER_NOTE_G5, 4,
+    BUZZER_NOTE_A5, 16, BUZZER_NOTE_G5, 16, BUZZER_NOTE_D6, 16, BUZZER_NOTE_C6, 32,
+    BUZZER_NOTE_G5, 10, BUZZER_NOTE_REST, 2, BUZZER_NOTE_G5, 4,
+    BUZZER_NOTE_G6, 16, BUZZER_NOTE_E6, 16, BUZZER_NOTE_C6, 16, BUZZER_NOTE_B5, 16, BUZZER_NOTE_A5, 32,
+    BUZZER_NOTE_F6, 10, BUZZER_NOTE_REST, 2, BUZZER_NOTE_F6, 4,
+    BUZZER_NOTE_E6, 16, BUZZER_NOTE_C6, 16, BUZZER_NOTE_D6, 16, BUZZER_NOTE_C6, 32,
+    // a breath before it loops
+    BUZZER_NOTE_REST, 32,
+    0
+};
+
+typedef struct {
+    uint8_t month;
+    uint8_t day;
+    int8_t *tune;
+} alarm_holiday_t;
+
+// Every alarm on these dates plays the holiday's tune, whatever it's set to.
+static const alarm_holiday_t HOLIDAYS[] = {
+    { .month = 7, .day = 15, .tune = _tune_birthday },   // julian_birthday
+};
+
+// Room for the longest tune plus the repeat marker and the end of sequence.
+static int8_t _ring_sequence[(ALARM_TUNE_MAX_NOTES + 1) * 2 + 1];
 
 static int8_t _wait_ticks;
 
@@ -69,6 +100,24 @@ static void _alarm_set_signal(alarm_state_t *state) {
 
 static void _alarm_show_alarm_on_text(alarm_state_t *state) {
     watch_display_text(WATCH_POSITION_SECONDS, state->alarm[state->alarm_idx].enabled ? "on" : "--");
+}
+
+static void _alarm_show_tune(alarm_state_t *state, uint8_t subsecond) {
+    uint8_t tune = state->alarm[state->alarm_idx].tune;
+    char buf[3];
+
+    if (subsecond % 2 && state->setting_state == alarm_setting_idx_tune) {
+        watch_display_text(WATCH_POSITION_SECONDS, "  ");
+        return;
+    }
+
+    if (tune == ALARM_TUNE_RANDOM) {
+        watch_display_text(WATCH_POSITION_SECONDS, "rn");
+        return;
+    }
+
+    snprintf(buf, sizeof(buf), "%02d", tune);
+    watch_display_text(WATCH_POSITION_SECONDS, buf);
 }
 
 static void _advanced_alarm_face_draw(alarm_state_t *state, uint8_t subsecond) {
@@ -95,7 +144,7 @@ static void _advanced_alarm_face_draw(alarm_state_t *state, uint8_t subsecond) {
     }
 
     // blink items if in settings mode
-    bool blinking = state->is_setting && subsecond % 2 && state->setting_state < alarm_setting_idx_pitch && !state->alarm_quick_ticks;
+    bool blinking = state->is_setting && subsecond % 2 && state->setting_state < alarm_setting_idx_tune && !state->alarm_quick_ticks;
     if (state->setting_state == alarm_setting_idx_alarm && blinking) {
         watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
     } else {
@@ -121,23 +170,7 @@ static void _advanced_alarm_face_draw(alarm_state_t *state, uint8_t subsecond) {
     }
 
     if (state->is_setting) {
-        watch_display_text(WATCH_POSITION_SECONDS, "  ");
-    // draw pitch level indicator
-        if ((subsecond % 2) == 0 || (state->setting_state != alarm_setting_idx_pitch)) {
-        for (i = 0; i <= state->alarm[state->alarm_idx].pitch && i < 3; i++)
-            watch_set_pixel(_buzzer_segdata[i][0], _buzzer_segdata[i][1]);
-        }
-        // draw beep rounds indicator
-        if ((subsecond % 2) == 0 || (state->setting_state != alarm_setting_idx_beeps)) {
-            if (state->alarm[state->alarm_idx].beeps == ALARM_MAX_BEEP_ROUNDS - 1)
-                watch_display_character('L', _beeps_blink_idx);
-            else {
-                if (state->alarm[state->alarm_idx].beeps == 0)
-                    watch_display_character('o', _beeps_blink_idx);
-                else
-                    watch_display_character(state->alarm[state->alarm_idx].beeps + 48, _beeps_blink_idx);
-            }
-        }
+        _alarm_show_tune(state, subsecond);
     }
     else {
         _alarm_show_alarm_on_text(state);
@@ -200,29 +233,72 @@ static void _alarm_update_alarm_enabled(alarm_state_t *state) {
     movement_set_alarm_enabled(active_alarms);
 }
 
-static void _alarm_play_short_beep(uint8_t pitch_idx) {
-    // play a short double beep
-    static int8_t beep_sequence[] = {
-        0, 4,
-        BUZZER_NOTE_REST, 4,
-        0, 6,
-        0
-    };
-    beep_sequence[0] = _buzzer_notes[pitch_idx];
-    beep_sequence[4] = _buzzer_notes[pitch_idx];
+static signal_tune_index_t _signal_tune_for(uint8_t tune) {
+    if (tune == ALARM_TUNE_RANDOM) return rand() % SIGNAL_TUNE_COUNT;
 
-    movement_play_sequence(beep_sequence, 0);
+    return tune - 1;
 }
 
-static void _alarm_indicate_beep(alarm_state_t *state) {
-    // play an example for the current beep setting
-    if (state->alarm[state->alarm_idx].beeps == 0) {
-        // short double beep
-        _alarm_play_short_beep(state->alarm[state->alarm_idx].pitch);
-    } else {
-        // regular alarm beep
-        movement_play_alarm_beeps(1, _buzzer_notes[state->alarm[state->alarm_idx].pitch]);
+static void _alarm_preview_tune(alarm_state_t *state) {
+    movement_play_signal_tune(_signal_tune_for(state->alarm[state->alarm_idx].tune));
+}
+
+static int8_t *_holiday_tune(void) {
+    watch_date_time_t now = movement_get_local_date_time();
+
+    for (uint8_t i = 0; i < sizeof(HOLIDAYS) / sizeof(HOLIDAYS[0]); i++) {
+        if (HOLIDAYS[i].month == now.unit.month && HOLIDAYS[i].day == now.unit.day) return HOLIDAYS[i].tune;
     }
+
+    return NULL;
+}
+
+/* Loops the tune until ALARM_RING_S has passed, letting the last pass finish. The buzzer
+ * only has one repeat counter, so a tune can't carry its own repeat marker, and the count
+ * tops out at INT8_MAX.
+ */
+static void _alarm_ring(const int8_t *tune) {
+    uint16_t length = 0;
+    uint16_t pass_ticks = 0;
+
+    for (; tune[length] != 0; length += 2) {
+        if (length >= ALARM_TUNE_MAX_NOTES * 2) {
+            printf("Alarm tune is over %d notes, so it can't loop. Raise ALARM_TUNE_MAX_NOTES. Playing the stock alarm instead.\r\n", ALARM_TUNE_MAX_NOTES);
+            movement_play_alarm();
+            return;
+        }
+
+        _ring_sequence[length] = tune[length];
+        _ring_sequence[length + 1] = tune[length + 1];
+        pass_ticks += tune[length + 1];
+    }
+
+    if (pass_ticks == 0) {
+        printf("Alarm tune is empty, so there's nothing to loop. Add notes to it. Playing the stock alarm instead.\r\n");
+        movement_play_alarm();
+        return;
+    }
+
+    uint16_t ring_ticks = ALARM_RING_S * BUZZER_TICKS_PER_S;
+    uint16_t passes = (ring_ticks + pass_ticks - 1) / pass_ticks;
+    uint16_t repeats = passes - 1;
+
+    _ring_sequence[length] = -(int8_t)(length / 2);
+    _ring_sequence[length + 1] = repeats > INT8_MAX ? INT8_MAX : repeats;
+    _ring_sequence[length + 2] = 0;
+
+    movement_play_sequence(_ring_sequence, BUZZER_PRIORITY_ALARM);
+}
+
+static void _alarm_play(alarm_state_t *state) {
+    int8_t *holiday_tune = USE_HOLIDAY_ALARMS ? _holiday_tune() : NULL;
+
+    if (holiday_tune != NULL) {
+        _alarm_ring(holiday_tune);
+        return;
+    }
+
+    _alarm_ring(movement_get_signal_tune(_signal_tune_for(state->alarm[state->alarm_playing_idx].tune)));
 }
 
 static void _abort_quick_ticks(alarm_state_t *state) {
@@ -244,20 +320,10 @@ void advanced_alarm_face_setup(uint8_t watch_face_index, void **context_ptr) {
         // initialize the default alarm values
         for (uint8_t i = 0; i < ALARM_ALARMS; i++) {
             state->alarm[i].day = ALARM_DAY_EACH_DAY;
-            state->alarm[i].beeps = 5;
-            state->alarm[i].pitch = 1;
+            state->alarm[i].tune = NEW_ALARM_TUNE;
         }
         state->alarm_handled_minute = -1;
         _wait_ticks = -1;
-
-        if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
-            _buzzer_segdata[0][0] = 1;
-            _buzzer_segdata[0][1] = 5;
-            _buzzer_segdata[1][0] = 2;
-            _buzzer_segdata[1][1] = 5;
-            _buzzer_segdata[2][0] = 3;
-            _buzzer_segdata[2][1] = 10;
-        }
     }
 }
 
@@ -389,17 +455,9 @@ bool advanced_alarm_face_loop(movement_event_t event, void *context) {
                 _abort_quick_ticks(state);
                 state->alarm[state->alarm_idx].minute = (state->alarm[state->alarm_idx].minute + 1) % 60;
                 break;
-            case alarm_setting_idx_pitch:
-                // pitch level
-                state->alarm[state->alarm_idx].pitch = (state->alarm[state->alarm_idx].pitch + 1) % 3;
-                // play sound to show user what this is for
-                _alarm_indicate_beep(state);
-                break;
-            case alarm_setting_idx_beeps:
-                // number of beeping rounds selection
-                state->alarm[state->alarm_idx].beeps = (state->alarm[state->alarm_idx].beeps + 1) % ALARM_MAX_BEEP_ROUNDS;
-                // play sounds when user reaches 'short' length and also one time on regular beep length
-                if (state->alarm[state->alarm_idx].beeps <= 1) _alarm_indicate_beep(state);
+            case alarm_setting_idx_tune:
+                state->alarm[state->alarm_idx].tune = (state->alarm[state->alarm_idx].tune + 1) % ALARM_TUNE_COUNT;
+                _alarm_preview_tune(state);
                 break;
             default:
                 break;
@@ -441,21 +499,12 @@ bool advanced_alarm_face_loop(movement_event_t event, void *context) {
         } else _wait_ticks = -1;
         break;
     case EVENT_BACKGROUND_TASK:
-        // play alarm
-        if (state->alarm[state->alarm_playing_idx].beeps == 0) {
-            // short beep
-            _alarm_play_short_beep(state->alarm[state->alarm_playing_idx].pitch);
-        } else {
-            // regular alarm beeps
-            movement_play_alarm_beeps((state->alarm[state->alarm_playing_idx].beeps == (ALARM_MAX_BEEP_ROUNDS - 1) ? 20 : state->alarm[state->alarm_playing_idx].beeps), 
-                                  _buzzer_notes[state->alarm[state->alarm_playing_idx].pitch]);
-        }
+        _alarm_play(state);
         // one time alarm? -> erase it
         if (state->alarm[state->alarm_playing_idx].day == ALARM_DAY_ONE_TIME) {
             state->alarm[state->alarm_playing_idx].day = ALARM_DAY_EACH_DAY;
             state->alarm[state->alarm_playing_idx].minute = state->alarm[state->alarm_playing_idx].hour = 0;
-            state->alarm[state->alarm_playing_idx].beeps = 5;
-            state->alarm[state->alarm_playing_idx].pitch = 1;
+            state->alarm[state->alarm_playing_idx].tune = NEW_ALARM_TUNE;
             state->alarm[state->alarm_playing_idx].enabled = false;
             _alarm_update_alarm_enabled(state);
         }
