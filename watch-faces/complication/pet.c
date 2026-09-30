@@ -83,12 +83,33 @@ static uint32_t _day_hash(watch_date_time_t now, uint32_t salt) {
     return ((uint32_t)(_day_number(now) + salt) * HASH_MULTIPLIER) >> HASH_DISCARD_BITS;
 }
 
-static bool _is_bedtime(watch_date_time_t now) {
-    uint16_t bedtime_min = (_settings.bedtime_earliest_hour * MINUTES_PER_HOUR) + (_day_hash(now, SALT_BEDTIME) % _settings.bedtime_spread_min);
-    uint16_t wake_min = (_settings.wake_earliest_hour * MINUTES_PER_HOUR) + (_day_hash(now, SALT_WAKE) % _settings.wake_spread_min);
-    uint16_t now_min = (now.unit.hour * MINUTES_PER_HOUR) + now.unit.minute;
+static uint16_t _minute_of_day(watch_date_time_t now) {
+    return (now.unit.hour * MINUTES_PER_HOUR) + now.unit.minute;
+}
 
-    return now_min >= bedtime_min || now_min < wake_min;
+static uint16_t _bedtime_min(watch_date_time_t now) {
+    return (_settings.bedtime_earliest_hour * MINUTES_PER_HOUR) + (_day_hash(now, SALT_BEDTIME) % _settings.bedtime_spread_min);
+}
+
+static uint16_t _wake_min(watch_date_time_t now) {
+    return (_settings.wake_earliest_hour * MINUTES_PER_HOUR) + (_day_hash(now, SALT_WAKE) % _settings.wake_spread_min);
+}
+
+static bool _is_bedtime(watch_date_time_t now) {
+    uint16_t now_min = _minute_of_day(now);
+
+    return now_min >= _bedtime_min(now) || now_min < _wake_min(now);
+}
+
+// Drowsy either side of the night, and the whole time it's been prodded awake through it.
+static bool _is_tired(watch_date_time_t now, uint32_t now_s) {
+    uint16_t now_min = _minute_of_day(now);
+    uint16_t bedtime_min = _bedtime_min(now);
+    uint16_t wake_min = _wake_min(now);
+    bool winding_down = now_min < bedtime_min && now_min + _settings.tired_before_bed_min >= bedtime_min;
+    bool waking_up = now_min >= wake_min && now_min < wake_min + _settings.tired_after_wake_min;
+
+    return now_s < _pet.awake_until_s || winding_down || waking_up;
 }
 
 static uint16_t _age_days(uint32_t now_s) {
@@ -295,6 +316,8 @@ pet_mood_t pet_mood(void) {
     if (pet->sick) return PET_MOOD_SICK;
     if (pet->asleep) return PET_MOOD_ASLEEP;
     if (pet->hunger <= _settings.hungry_threshold) return PET_MOOD_HUNGRY;
+    if (_is_tired(movement_get_local_date_time(), pet->settled_at_s)) return PET_MOOD_TIRED;
+    if (pet->happiness <= _settings.sad_threshold) return PET_MOOD_SAD;
 
     return PET_MOOD_HAPPY;
 }
