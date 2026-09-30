@@ -38,3 +38,19 @@ int8_t signal_tune_birthday[] = {
     BUZZER_NOTE_REST, 32,
     0
 };
+
+// The opening verse, "the legend lives on from the Chippewa on down, of the big lake they called Gitche Gumee".
+int8_t signal_tune_edmund_fitzgerald[] = {
+    BUZZER_NOTE_D5, 12,
+    BUZZER_NOTE_G5, 22, BUZZER_NOTE_REST, 2, BUZZER_NOTE_G5, 12, BUZZER_NOTE_A5, 12,
+    BUZZER_NOTE_B5, 24, BUZZER_NOTE_A5, 12, BUZZER_NOTE_G5, 12,
+    BUZZER_NOTE_E5, 24, BUZZER_NOTE_G5, 12, BUZZER_NOTE_A5, 12,
+    BUZZER_NOTE_G5, 36, BUZZER_NOTE_REST, 12,
+    BUZZER_NOTE_G5, 12, BUZZER_NOTE_A5, 12,
+    BUZZER_NOTE_B5, 22, BUZZER_NOTE_REST, 2, BUZZER_NOTE_B5, 12, BUZZER_NOTE_D6, 12,
+    BUZZER_NOTE_B5, 24, BUZZER_NOTE_A5, 12, BUZZER_NOTE_G5, 12,
+    BUZZER_NOTE_A5, 48,
+    // a breath before it loops
+    BUZZER_NOTE_REST, 32,
+    0
+};
