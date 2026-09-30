@@ -136,10 +136,13 @@ const pet_settings_t pet_default_settings = {
     .bedtime_spread_min = 120,
     .wake_earliest_hour = 7,
     .wake_spread_min = 150,
+    .tired_before_bed_min = 30,
+    .tired_after_wake_min = 30,
 
     .illness_odds = 12,
     .neglect_threshold = 20,
     .hungry_threshold = 35,
+    .sad_threshold = 35,
     .illness_health_threshold = 30,
     .pokes_to_cure = 3,
 

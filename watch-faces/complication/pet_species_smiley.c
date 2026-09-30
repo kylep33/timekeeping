@@ -34,28 +34,55 @@
 static const uint8_t FACE_COLUMN = 0;
 static const uint8_t FACE_WIDTH = 4;
 
-static const uint8_t BLINK_EVERY_N_TICKS = 8;
 static const uint8_t REACTION_TICKS = 4;
 
 // Opens up before the food shows, so you can tell what's about to happen.
 static const uint8_t OPEN_TICKS = 2;
 static const uint8_t CHEW_TICKS = 4;
 
-// Every face is FACE_WIDTH characters. # is a raised o, for eyes wide open.
-// <> drops the middle walls of oo, so the open mouth is one loop across two digits.
-static const char *MOOD_FACES[PET_MOOD_COUNT][FRAME_COUNT] = {
-    [PET_MOOD_HAPPY]    = { "^__^", "-__-" },
-    [PET_MOOD_HUNGRY]   = { "#<>#", "#__#" },
-    [PET_MOOD_SICK]     = { "xnnx", "-nn-" },
-    [PET_MOOD_ASLEEP]   = { "-__-", "----" },
-    [PET_MOOD_CRITICAL] = { "xnnx", "    " },
-    [PET_MOOD_DEAD]     = { "x__x", "x__x" },
+typedef struct {
+    const char *face;
+    uint8_t ticks;
+} smiley_frame_t;
+
+typedef struct {
+    const smiley_frame_t *frames;
+    uint8_t count;
+} smiley_anim_t;
+
+#define SMILEY_ANIM(frames) { frames, sizeof(frames) / sizeof(frames[0]) }
+
+/* Every face is FACE_WIDTH characters. # is a raised o and o a lowered one, 0 fills
+ * the whole digit, - and _ are eyes shut high and low. <> drops the middle walls of oo,
+ * so the open mouth is one loop across two digits.
+ */
+
+// Mostly just looking, with the odd blink and a grin now and then.
+static const smiley_frame_t HAPPY_FRAMES[] = { { "#__#", 10 }, { "-__-", 1 }, { "#__#", 12 }, { "^__^", 6 } };
+static const smiley_frame_t HUNGRY_FRAMES[] = { { "#__#", 2 }, { "#<>#", 2 } };
+static const smiley_frame_t TIRED_FRAMES[] = { { "o__0", 4 }, { "0__o", 4 }, { "-__-", 3 } };
+static const smiley_frame_t SAD_FRAMES[] = { { "o__o", 8 }, { "____", 1 } };
+static const smiley_frame_t SICK_FRAMES[] = { { "xnnx", 7 }, { "-nn-", 1 } };
+static const smiley_frame_t ASLEEP_FRAMES[] = { { "-__-", 7 }, { "----", 1 } };
+// Flashing every tick is hard to ignore, which is the point this close to death.
+static const smiley_frame_t CRITICAL_FRAMES[] = { { "xnnx", 1 }, { "    ", 1 } };
+static const smiley_frame_t DEAD_FRAMES[] = { { "x__x", 1 } };
+
+static const smiley_anim_t MOOD_ANIMS[PET_MOOD_COUNT] = {
+    [PET_MOOD_HAPPY]    = SMILEY_ANIM(HAPPY_FRAMES),
+    [PET_MOOD_HUNGRY]   = SMILEY_ANIM(HUNGRY_FRAMES),
+    [PET_MOOD_TIRED]    = SMILEY_ANIM(TIRED_FRAMES),
+    [PET_MOOD_SAD]      = SMILEY_ANIM(SAD_FRAMES),
+    [PET_MOOD_SICK]     = SMILEY_ANIM(SICK_FRAMES),
+    [PET_MOOD_ASLEEP]   = SMILEY_ANIM(ASLEEP_FRAMES),
+    [PET_MOOD_CRITICAL] = SMILEY_ANIM(CRITICAL_FRAMES),
+    [PET_MOOD_DEAD]     = SMILEY_ANIM(DEAD_FRAMES),
 };
 
 static const char *INTERACT_FACES[PET_INTERACT_COUNT][FRAME_COUNT] = {
     [PET_INTERACT_POKE] = { "#<>#", "#__#" },
     [PET_INTERACT_PAT]  = { "-__-", "^__^" },
-    [PET_INTERACT_WAVE] = { "-__^", "^__^" },
+    [PET_INTERACT_WAVE] = { "-__#", "#__#" },
 };
 
 static const char WAITING_FACE[] = "#<>#";
@@ -70,7 +97,6 @@ static const uint8_t ENTER_TICKS = 2;
 static const uint8_t AIM_TICKS = 4;
 static const uint8_t SCREAM_TICKS = 6;
 static const uint8_t DEAD_TICKS = 4;
-static const uint8_t IDLE_FRAME = 0;
 
 // A 7 is an arm pointing left off the top of a body.
 static const char GUY_WALKING_SPRITE[] = "Y";
@@ -116,6 +142,9 @@ typedef struct {
 } murder_t;
 
 static uint8_t _tick;
+static pet_mood_t _anim_mood;
+static uint8_t _frame_index;
+static uint8_t _frame_ticks;
 static uint8_t _reaction_ticks_left;
 static pet_interact_kind_t _reaction;
 static eat_t _eat;
@@ -140,21 +169,39 @@ static void _draw_face(const char *face) {
     _draw_face_over(face, bottom);
 }
 
-static uint8_t _frame_for(pet_mood_t mood) {
-    // Flashing every tick is hard to ignore, which is the point this close to death.
-    if (mood == PET_MOOD_CRITICAL) return _tick % FRAME_COUNT;
+// A mood that just changed starts from its first frame.
+static const char *_mood_face(pet_mood_t mood) {
+    uint8_t index = (mood == _anim_mood) ? _frame_index : 0;
 
-    return (_tick % BLINK_EVERY_N_TICKS == 0) ? 1 : 0;
+    return MOOD_ANIMS[mood].frames[index].face;
+}
+
+static void _anim_advance(pet_mood_t mood) {
+    const smiley_anim_t *anim = &MOOD_ANIMS[mood];
+
+    if (mood != _anim_mood) {
+        _anim_mood = mood;
+        _frame_index = 0;
+        _frame_ticks = 0;
+        return;
+    }
+
+    _frame_ticks++;
+    if (_frame_ticks < anim->frames[_frame_index].ticks) return;
+
+    _frame_ticks = 0;
+    _frame_index = (_frame_index + 1) % anim->count;
 }
 
 static void _home_activate(void) {
     _reaction_ticks_left = 0;
+    _frame_index = 0;
+    _frame_ticks = 0;
 }
 
 static void _home_advance(pet_mood_t mood) {
-    (void) mood;
-
     _tick++;
+    _anim_advance(mood);
     if (_reaction_ticks_left > 0) _reaction_ticks_left--;
 }
 
@@ -170,7 +217,7 @@ static void _home_draw(pet_mood_t mood) {
         return;
     }
 
-    _draw_face(MOOD_FACES[mood][_frame_for(mood)]);
+    _draw_face(_mood_face(mood));
 }
 
 static void _react(pet_interact_kind_t kind) {
@@ -278,7 +325,7 @@ static pet_anim_step_t _murder_advance(void) {
 static const char *_murder_face(void) {
     switch (_murder.phase) {
         case MURDER_PHASE_ENTERING:
-            return MOOD_FACES[pet_mood()][IDLE_FRAME];
+            return _mood_face(pet_mood());
         case MURDER_PHASE_AIMING:
         case MURDER_PHASE_FIRING:
             return SHOCKED_FACE;

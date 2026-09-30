@@ -54,9 +54,12 @@ typedef struct {
     uint16_t bedtime_spread_min;
     uint16_t wake_earliest_hour;
     uint16_t wake_spread_min;
+    uint16_t tired_before_bed_min;
+    uint16_t tired_after_wake_min;
     uint16_t illness_odds;
     uint8_t neglect_threshold;
     uint8_t hungry_threshold;
+    uint8_t sad_threshold;
     uint8_t illness_health_threshold;
     uint8_t pokes_to_cure;
     uint8_t poke_happiness_gain;
