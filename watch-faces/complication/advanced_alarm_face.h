@@ -50,7 +50,8 @@
  *    - You can select the tune the alarm plays: 'rn' picks a random one each time, 01 and up
  *      go through the signal tunes in order, previewing each one.
  *    - An alarm loops its tune for ALARM_RING_S, then lets the last pass finish.
- *    - On a holiday in the HOLIDAYS table, every alarm plays that holiday's tune instead.
+ *    - On a holiday in HOLIDAYS (movement_custom_signal_tunes_special.c), every alarm plays
+ *      that holiday's tune instead.
  *    - The simple watch face indicates if any alarm is set within the next 24h by showing the signal
  *      indicator.
  */

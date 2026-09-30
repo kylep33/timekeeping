@@ -384,6 +384,8 @@ void movement_request_wake(void);
 void movement_play_note(watch_buzzer_note_t note, uint16_t duration_ms);
 void movement_play_signal(void);
 void movement_set_signal_tune(signal_tune_index_t tune);
+// The top of the hour signal. Plays today's holiday tune instead when there is one.
+void movement_play_hourly_chime(void);
 // Plays a tune once without adopting it as the mode's hourly chime, for faces that just want a song.
 void movement_play_signal_tune(signal_tune_index_t tune);
 // The raw [note, duration, ...] pairs behind a tune, for faces that want to track its beat rather than just play it.

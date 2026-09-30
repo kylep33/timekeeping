@@ -26,9 +26,12 @@
 
 #include <stdint.h>
 
-/* Tunes that are only ever played by name, like holiday alarms. Kept out of signal_tunes
+/* Tunes that are only ever played by name, like holidays. Kept out of signal_tunes
  * so they never turn up as a chime, an alarm choice or a random pick.
  */
 
 extern int8_t signal_tune_birthday[];
 extern int8_t signal_tune_edmund_fitzgerald[];
+
+// Today's tune from the HOLIDAYS table, or NULL on an ordinary day.
+int8_t *holiday_tune_today(void);

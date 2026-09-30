@@ -49,6 +49,7 @@
 #include "movement_config.h"
 
 #include "movement_custom_signal_tunes.h"
+#include "movement_custom_signal_tunes_special.h"
 
 #if __EMSCRIPTEN__
 #include <emscripten.h>
@@ -650,6 +651,17 @@ void movement_set_signal_tune(signal_tune_index_t tune) {
 
 void movement_play_signal(void) {
     movement_play_sequence(signal_tunes[_signal_tune], BUZZER_PRIORITY_SIGNAL);
+}
+
+void movement_play_hourly_chime(void) {
+    int8_t *holiday_tune = MOVEMENT_HOLIDAY_CHIMES ? holiday_tune_today() : NULL;
+
+    if (holiday_tune != NULL) {
+        movement_play_sequence(holiday_tune, BUZZER_PRIORITY_SIGNAL);
+        return;
+    }
+
+    movement_play_signal();
 }
 
 void movement_play_signal_tune(signal_tune_index_t tune) {
