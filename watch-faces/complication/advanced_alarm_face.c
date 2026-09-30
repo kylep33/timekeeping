@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include "advanced_alarm_face.h"
+#include "movement_custom_signal_tunes_special.h"
 #include "watch.h"
 #include "watch_utility.h"
 #include "watch_common_display.h"
@@ -52,20 +53,6 @@ static const uint8_t NEW_ALARM_TUNE = ALARM_TUNE_RANDOM;
 
 static const bool USE_HOLIDAY_ALARMS = true;
 
-static int8_t _tune_birthday[] = {
-    BUZZER_NOTE_G5, 10, BUZZER_NOTE_REST, 2, BUZZER_NOTE_G5, 4,
-    BUZZER_NOTE_A5, 16, BUZZER_NOTE_G5, 16, BUZZER_NOTE_C6, 16, BUZZER_NOTE_B5, 32,
-    BUZZER_NOTE_G5, 10, BUZZER_NOTE_REST, 2, BUZZER_NOTE_G5, 4,
-    BUZZER_NOTE_A5, 16, BUZZER_NOTE_G5, 16, BUZZER_NOTE_D6, 16, BUZZER_NOTE_C6, 32,
-    BUZZER_NOTE_G5, 10, BUZZER_NOTE_REST, 2, BUZZER_NOTE_G5, 4,
-    BUZZER_NOTE_G6, 16, BUZZER_NOTE_E6, 16, BUZZER_NOTE_C6, 16, BUZZER_NOTE_B5, 16, BUZZER_NOTE_A5, 32,
-    BUZZER_NOTE_F6, 10, BUZZER_NOTE_REST, 2, BUZZER_NOTE_F6, 4,
-    BUZZER_NOTE_E6, 16, BUZZER_NOTE_C6, 16, BUZZER_NOTE_D6, 16, BUZZER_NOTE_C6, 32,
-    // a breath before it loops
-    BUZZER_NOTE_REST, 32,
-    0
-};
-
 typedef struct {
     uint8_t month;
     uint8_t day;
@@ -74,7 +61,7 @@ typedef struct {
 
 // Every alarm on these dates plays the holiday's tune, whatever it's set to.
 static const alarm_holiday_t HOLIDAYS[] = {
-    { .month = 7, .day = 15, .tune = _tune_birthday },   // julian_birthday
+    { .month = 7, .day = 15, .tune = signal_tune_birthday },   // julian_birthday
 };
 
 // Room for the longest tune plus the repeat marker and the end of sequence.
