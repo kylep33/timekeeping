@@ -53,18 +53,6 @@ static const uint8_t NEW_ALARM_TUNE = ALARM_TUNE_RANDOM;
 
 static const bool USE_HOLIDAY_ALARMS = true;
 
-typedef struct {
-    uint8_t month;
-    uint8_t day;
-    int8_t *tune;
-} alarm_holiday_t;
-
-// Every alarm on these dates plays the holiday's tune, whatever it's set to.
-static const alarm_holiday_t HOLIDAYS[] = {
-    { .month = 7, .day = 15, .tune = signal_tune_birthday },   // julian_birthday
-    { .month = 11, .day = 10, .tune = signal_tune_edmund_fitzgerald },   // wreck of the edmund fitzgerald, 1975
-};
-
 // Room for the longest tune plus the repeat marker and the end of sequence.
 static int8_t _ring_sequence[(ALARM_TUNE_MAX_NOTES + 1) * 2 + 1];
 
@@ -231,16 +219,6 @@ static void _alarm_preview_tune(alarm_state_t *state) {
     movement_play_signal_tune(_signal_tune_for(state->alarm[state->alarm_idx].tune));
 }
 
-static int8_t *_holiday_tune(void) {
-    watch_date_time_t now = movement_get_local_date_time();
-
-    for (uint8_t i = 0; i < sizeof(HOLIDAYS) / sizeof(HOLIDAYS[0]); i++) {
-        if (HOLIDAYS[i].month == now.unit.month && HOLIDAYS[i].day == now.unit.day) return HOLIDAYS[i].tune;
-    }
-
-    return NULL;
-}
-
 /* Loops the tune until ALARM_RING_S has passed, letting the last pass finish. The buzzer
  * only has one repeat counter, so a tune can't carry its own repeat marker, and the count
  * tops out at INT8_MAX.
@@ -279,7 +257,7 @@ static void _alarm_ring(const int8_t *tune) {
 }
 
 static void _alarm_play(alarm_state_t *state) {
-    int8_t *holiday_tune = USE_HOLIDAY_ALARMS ? _holiday_tune() : NULL;
+    int8_t *holiday_tune = USE_HOLIDAY_ALARMS ? holiday_tune_today() : NULL;
 
     if (holiday_tune != NULL) {
         _alarm_ring(holiday_tune);

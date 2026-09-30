@@ -132,6 +132,9 @@ const uint8_t pet_num_games = sizeof(pet_games) / sizeof(pet_game_t);
 /* Hourly chime tune used until a mode selects its own. See movement_custom_signal_tunes.h for options. */
 #define MOVEMENT_DEFAULT_SIGNAL_TUNE SIGNAL_TUNE_KIM_POSSIBLE
 
+/* On a holiday (HOLIDAYS in movement_custom_signal_tunes_special.c) the hourly chime plays its tune instead. */
+#define MOVEMENT_HOLIDAY_CHIMES true
+
 /* Determines the intensity of the led colors
  * Set a hex value 0-15 with 0x0 being off and 0xF being max intensity
  */

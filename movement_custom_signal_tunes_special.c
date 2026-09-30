@@ -66,3 +66,25 @@ int8_t signal_tune_edmund_fitzgerald[] = {
     BUZZER_NOTE_F5SHARP_G5FLAT, 124, BUZZER_NOTE_F5SHARP_G5FLAT, 124,
     0
 };
+
+typedef struct {
+    uint8_t month;
+    uint8_t day;
+    int8_t *tune;
+} holiday_t;
+
+// Alarms and the hourly chime play the holiday's tune on these dates, whatever they're set to.
+static const holiday_t HOLIDAYS[] = {
+    { .month = 7, .day = 15, .tune = signal_tune_birthday },   // julian_birthday
+    { .month = 11, .day = 10, .tune = signal_tune_edmund_fitzgerald },   // wreck of the edmund fitzgerald, 1975
+};
+
+int8_t *holiday_tune_today(void) {
+    watch_date_time_t now = movement_get_local_date_time();
+
+    for (uint8_t i = 0; i < sizeof(HOLIDAYS) / sizeof(HOLIDAYS[0]); i++) {
+        if (HOLIDAYS[i].month == now.unit.month && HOLIDAYS[i].day == now.unit.day) return HOLIDAYS[i].tune;
+    }
+
+    return NULL;
+}
