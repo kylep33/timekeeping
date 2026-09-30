@@ -55,6 +55,9 @@ comp_cb_t comp_callbacks[WATCH_RTC_N_COMP_CB];
 
 static uint32_t scheduled_comp_counter;
 
+// Same as the hardware: a callback that came due while another was firing still gets its turn.
+static const uint32_t RTC_COMP_GRACE_PERIOD = 4;
+
 static long alarm_interval_id = -1;
 static long alarm_timeout_id = -1;
 static double alarm_interval;
@@ -246,7 +249,8 @@ static void _watch_process_comp_callbacks(void) {
     // In hardware the interrupt fires one tick after the matching counter
     if (counter == (scheduled_comp_counter + 1)) {
         for (uint8_t index = 0; index < WATCH_RTC_N_COMP_CB; ++index) {
-            if (comp_callbacks[index].enabled && scheduled_comp_counter == comp_callbacks[index].counter) {
+            if (comp_callbacks[index].enabled &&
+                (scheduled_comp_counter - comp_callbacks[index].counter) < RTC_COMP_GRACE_PERIOD) {
                 comp_callbacks[index].enabled = false;
                 comp_callbacks[index].callback();
             }
@@ -335,17 +339,18 @@ void watch_rtc_schedule_next_comp(void) {
         return;
     }
 
-    // The soonest we can schedule is the next tick
-    curr_counter +=1;
+    /* Counting from a little in the past, so one that's already due sorts first instead of
+     * wrapping to the back of the line behind the next timeout.
+     */
+    rtc_counter_t lax_curr_counter = curr_counter - RTC_COMP_GRACE_PERIOD;
 
     bool schedule_any = false;
     rtc_counter_t comp_counter;
     rtc_counter_t min_diff = UINT_MAX;
 
     for (uint8_t index = 0; index < WATCH_RTC_N_COMP_CB; ++index) {
-        // rtc_counter_t diff = 
         if (comp_callbacks[index].enabled) {
-            rtc_counter_t diff = comp_callbacks[index].counter - curr_counter;
+            rtc_counter_t diff = comp_callbacks[index].counter - lax_curr_counter;
             if (diff <= min_diff) {
                 min_diff = diff;
                 comp_counter = comp_callbacks[index].counter;
@@ -355,6 +360,8 @@ void watch_rtc_schedule_next_comp(void) {
     }
 
     if (schedule_any) {
+        // Anything already due fires on the next tick, the soonest the counter can match.
+        if ((comp_counter - lax_curr_counter) < (curr_counter - lax_curr_counter)) comp_counter = curr_counter;
         scheduled_comp_counter = comp_counter;
     } else {
         scheduled_comp_counter = curr_counter - 2;
