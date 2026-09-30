@@ -39,10 +39,8 @@ int8_t signal_tune_birthday[] = {
     0
 };
 
-/* Terry Clements' intro riff, measures 1-8 of Songsterr's transcription of the record
- * (song 36755, lead guitar), an octave up to suit the piezo. 6/8 at 93 bpm, so an eighth
- * is 21 ticks. Bends are a short grace note into the pitch they reach, and a note too
- * long for one duration is split in two.
+/* Terry Clements' guitar on the record,
+ https://www.songsterr.com/a/wsa/gordon-lightfoot-the-wreck-of-the-edmund-fitzgerald-tab-s36755
  */
 int8_t signal_tune_edmund_fitzgerald[] = {
     // B, hammer on to C#, back to B
@@ -57,13 +55,20 @@ int8_t signal_tune_edmund_fitzgerald[] = {
     // G# bent up to A and let back down, F#, E
     BUZZER_NOTE_G5SHARP_A5FLAT, 10, BUZZER_NOTE_A5, 57, BUZZER_NOTE_G5SHARP_A5FLAT, 15,
     BUZZER_NOTE_F5SHARP_G5FLAT, 21, BUZZER_NOTE_E5, 21,
-    // F# held two bars
-    BUZZER_NOTE_F5SHARP_G5FLAT, 124, BUZZER_NOTE_F5SHARP_G5FLAT, 124,
-    // F# bent up to G# and let back down, E
-    BUZZER_NOTE_F5SHARP_G5FLAT, 10, BUZZER_NOTE_G5SHARP_A5FLAT, 78, BUZZER_NOTE_F5SHARP_G5FLAT, 15,
+    // F# held half a bar then up
+    BUZZER_NOTE_F5SHARP_G5FLAT, 19, BUZZER_NOTE_B5, 60,
+
+   // m151: G# bent up to A and held, then down through G# to F#
+    BUZZER_NOTE_G5SHARP_A5FLAT, 10, BUZZER_NOTE_A5, 83,
+    BUZZER_NOTE_G5SHARP_A5FLAT, 12,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 19, BUZZER_NOTE_REST, 2,
+    // m152: F# bent up to G# and held, then down through F# to E
+    BUZZER_NOTE_F5SHARP_G5FLAT, 10, BUZZER_NOTE_G5SHARP_A5FLAT, 84,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 11,
     BUZZER_NOTE_E5, 21,
-    // F#, held out to the end of the next bar
-    BUZZER_NOTE_F5SHARP_G5FLAT, 124, BUZZER_NOTE_F5SHARP_G5FLAT, 124,
+    // m153: F#, then down to B, left ringing to the end
+    BUZZER_NOTE_F5SHARP_G5FLAT, 19, BUZZER_NOTE_B4, 84,
+
     0
 };
 
