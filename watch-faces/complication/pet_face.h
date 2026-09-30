@@ -35,9 +35,10 @@
  * Nothing else is on screen: the numbers are all on the stats page, so the pet has
  * the display to itself.
  *
- * ALARM tap:   interact with it; after bedtime the first tap prods it awake instead
+ * ALARM tap:   interact with it; after bedtime the first tap prods it awake instead;
+ *              on a dead pet, hatch the next one
  * ALARM hold:  peek the time and date, the weekday trading places with the month each
- *              second; on a dead pet, hatch the next one
+ *              second
  * LIGHT tap:   next page of hunger, happiness, health and age, then back to the pet;
  *              the name in the big digits, its number along the top
  * LIGHT hold:  backlight

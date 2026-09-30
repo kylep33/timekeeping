@@ -167,16 +167,13 @@ static void _advance(pet_face_state_t *state) {
     pet_species_current()->home_advance(pet_mood());
 }
 
-static void _handle_hold(pet_face_state_t *state) {
+// A tap on the grave hatches the next one, so the hold is always free for peeking at the time.
+static void _handle_tap(void) {
     if (pet_mood() == PET_MOOD_DEAD) {
         pet_hatch();
         return;
     }
 
-    state->peeking = true;
-}
-
-static void _handle_interact(void) {
     pet_interact_kind_t kind = pet_interact();
 
     if (kind == PET_INTERACT_COUNT) return;
@@ -214,11 +211,11 @@ bool pet_face_loop(movement_event_t event, void *context) {
             _redraw(state);
             break;
         case EVENT_ALARM_BUTTON_UP:
-            _handle_interact();
+            _handle_tap();
             _redraw(state);
             break;
         case EVENT_ALARM_LONG_PRESS:
-            _handle_hold(state);
+            state->peeking = true;
             _redraw(state);
             break;
         case EVENT_ALARM_LONG_UP:
