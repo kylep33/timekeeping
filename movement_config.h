@@ -93,9 +93,9 @@ const watch_face_t watch_faces[] = {
 /* The first face of a mode is its resting face: every timeout returns there, so it should
  * be something worth staring at rather than a screen a stray press would disturb.
  */
-static const uint8_t daily_faces[] = { FACE_ISH, FACE_TIMER, FACE_STOPWATCH, FACE_COIN_FLIP };
+static const uint8_t daily_faces[] = { FACE_CLOCK, FACE_TIMER, FACE_STOPWATCH, FACE_COIN_FLIP };
 static const uint8_t climb_faces[] = { FACE_CLOCK, FACE_CLIMB_TIMER };
-static const uint8_t game_faces[] = { FACE_CLOCK, FACE_PROBABILITY, FACE_PULSOMETER, FACE_ENDLESS_RUNNER, FACE_PING, FACE_TAROT, FACE_SIMON };
+static const uint8_t game_faces[] = { FACE_CLOCK, FACE_PROBABILITY, FACE_ENDLESS_RUNNER, FACE_PING, FACE_TAROT, FACE_SIMON };
 static const uint8_t pet_faces[] = { FACE_PET, FACE_PET_FOOD, FACE_PET_PLAY, FACE_PET_SING };
 static const uint8_t outdoor_faces[] = { FACE_CLOCK, FACE_SUNRISE_SUNSET, FACE_MOON_PHASE };
 static const uint8_t setup_faces[] = { FACE_CLOCK, FACE_SET_TIME, FACE_ADVANCED_ALARM, FACE_FINETUNE, FACE_NANOSEC, FACE_SETTINGS, FACE_VOLTAGE };
