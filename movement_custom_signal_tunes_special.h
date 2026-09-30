@@ -31,3 +31,4 @@
  */
 
 extern int8_t signal_tune_birthday[];
+extern int8_t signal_tune_edmund_fitzgerald[];

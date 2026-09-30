@@ -62,6 +62,7 @@ typedef struct {
 // Every alarm on these dates plays the holiday's tune, whatever it's set to.
 static const alarm_holiday_t HOLIDAYS[] = {
     { .month = 7, .day = 15, .tune = signal_tune_birthday },   // julian_birthday
+    { .month = 11, .day = 10, .tune = signal_tune_edmund_fitzgerald },   // wreck of the edmund fitzgerald, 1975
 };
 
 // Room for the longest tune plus the repeat marker and the end of sequence.
