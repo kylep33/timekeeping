@@ -42,9 +42,10 @@ static const uint8_t OPEN_TICKS = 2;
 static const uint8_t CHEW_TICKS = 4;
 
 // Every face is FACE_WIDTH characters. # is a raised o, for eyes wide open.
+// <> drops the middle walls of oo, so the open mouth is one loop across two digits.
 static const char *MOOD_FACES[PET_MOOD_COUNT][FRAME_COUNT] = {
     [PET_MOOD_HAPPY]    = { "^__^", "-__-" },
-    [PET_MOOD_HUNGRY]   = { "#oo#", "#__#" },
+    [PET_MOOD_HUNGRY]   = { "#<>#", "#__#" },
     [PET_MOOD_SICK]     = { "xnnx", "-nn-" },
     [PET_MOOD_ASLEEP]   = { "-__-", "----" },
     [PET_MOOD_CRITICAL] = { "xnnx", "    " },
@@ -52,16 +53,16 @@ static const char *MOOD_FACES[PET_MOOD_COUNT][FRAME_COUNT] = {
 };
 
 static const char *INTERACT_FACES[PET_INTERACT_COUNT][FRAME_COUNT] = {
-    [PET_INTERACT_POKE] = { "#oo#", "#__#" },
+    [PET_INTERACT_POKE] = { "#<>#", "#__#" },
     [PET_INTERACT_PAT]  = { "-__-", "^__^" },
     [PET_INTERACT_WAVE] = { "-__^", "^__^" },
 };
 
-static const char WAITING_FACE[] = "#oo#";
-static const char *CHEWING_FACES[FRAME_COUNT] = { "^__^", "^oo^" };
+static const char WAITING_FACE[] = "#<>#";
+static const char *CHEWING_FACES[FRAME_COUNT] = { "^__^", "^<>^" };
 
 static const char SING_SHUT_FACE[] = "^__^";
-static const char SING_OPEN_FACE[] = "^oo^";
+static const char SING_OPEN_FACE[] = "^<>^";
 
 // The last cell, leaving the one between it and the face for the bullet.
 static const uint8_t GUY_COLUMN = PET_SCREEN_BOTTOM_LENGTH - 1;
@@ -76,8 +77,8 @@ static const char GUY_WALKING_SPRITE[] = "Y";
 static const char GUY_AIMING_SPRITE[] = "7";
 static const char BULLET_SPRITE[] = "-";
 
-static const char SHOCKED_FACE[] = "#oo#";
-static const char *SCREAMING_FACES[FRAME_COUNT] = { "#oo#", "xoox" };
+static const char SHOCKED_FACE[] = "#<>#";
+static const char *SCREAMING_FACES[FRAME_COUNT] = { "#<>#", "x<>x" };
 static const char DEAD_FACE[] = "x__x";
 
 // Gulps rather than chirps, since it's all mouth.
