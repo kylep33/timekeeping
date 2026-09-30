@@ -39,17 +39,23 @@ int8_t signal_tune_birthday[] = {
     0
 };
 
-// The opening verse, "the legend lives on from the Chippewa on down, of the big lake they called Gitche Gumee".
+/* The steel guitar riff between verses, an octave up to suit the piezo. Slides and bends
+ * are a short grace note into the one they land on. 6/8, an eighth is about 21 ticks.
+ */
 int8_t signal_tune_edmund_fitzgerald[] = {
-    BUZZER_NOTE_D5, 12,
-    BUZZER_NOTE_G5, 22, BUZZER_NOTE_REST, 2, BUZZER_NOTE_G5, 12, BUZZER_NOTE_A5, 12,
-    BUZZER_NOTE_B5, 24, BUZZER_NOTE_A5, 12, BUZZER_NOTE_G5, 12,
-    BUZZER_NOTE_E5, 24, BUZZER_NOTE_G5, 12, BUZZER_NOTE_A5, 12,
-    BUZZER_NOTE_G5, 36, BUZZER_NOTE_REST, 12,
-    BUZZER_NOTE_G5, 12, BUZZER_NOTE_A5, 12,
-    BUZZER_NOTE_B5, 22, BUZZER_NOTE_REST, 2, BUZZER_NOTE_B5, 12, BUZZER_NOTE_D6, 12,
-    BUZZER_NOTE_B5, 24, BUZZER_NOTE_A5, 12, BUZZER_NOTE_G5, 12,
-    BUZZER_NOTE_A5, 48,
+    BUZZER_NOTE_B5, 40, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_B5, 6, BUZZER_NOTE_C6SHARP_D6FLAT, 36,
+    BUZZER_NOTE_B5, 21,
+    BUZZER_NOTE_A5, 63, BUZZER_NOTE_REST, 12,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 19, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 19, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 21,
+    BUZZER_NOTE_G5SHARP_A5FLAT, 19, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_G5SHARP_A5FLAT, 6, BUZZER_NOTE_A5, 36,
+    BUZZER_NOTE_G5SHARP_A5FLAT, 21,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 21,
+    BUZZER_NOTE_E5, 21,
+    BUZZER_NOTE_F5SHARP_G5FLAT, 63,
     // a breath before it loops
     BUZZER_NOTE_REST, 32,
     0
