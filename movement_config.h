@@ -33,7 +33,7 @@
 typedef enum {
     FACE_CLOCK,
     FACE_ISH,
-    FACE_TIMER,
+    FACE_COUNTDOWN,
     FACE_STOPWATCH,
     FACE_COIN_FLIP,
     FACE_PROBABILITY,
@@ -62,7 +62,7 @@ typedef enum {
 const watch_face_t watch_faces[] = {
     [FACE_CLOCK] = clock_face,
     [FACE_ISH] = ish_face,
-    [FACE_TIMER] = timer_face,
+    [FACE_COUNTDOWN] = countdown_face,
     [FACE_STOPWATCH] = stopwatch_face,
     [FACE_COIN_FLIP] = simple_coin_flip_face,
     [FACE_PROBABILITY] = probability_face,
@@ -93,7 +93,7 @@ const watch_face_t watch_faces[] = {
 /* The first face of a mode is its resting face: every timeout returns there, so it should
  * be something worth staring at rather than a screen a stray press would disturb.
  */
-static const uint8_t daily_faces[] = { FACE_CLOCK, FACE_TIMER, FACE_STOPWATCH, FACE_COIN_FLIP };
+static const uint8_t daily_faces[] = { FACE_CLOCK, FACE_COUNTDOWN, FACE_STOPWATCH, FACE_COIN_FLIP };
 static const uint8_t climb_faces[] = { FACE_CLOCK, FACE_CLIMB_TIMER };
 static const uint8_t game_faces[] = { FACE_CLOCK, FACE_PROBABILITY, FACE_ENDLESS_RUNNER, FACE_PING, FACE_TAROT, FACE_SIMON };
 static const uint8_t pet_faces[] = { FACE_PET, FACE_PET_FOOD, FACE_PET_PLAY, FACE_PET_SING };
