@@ -50,6 +50,7 @@ static const char *TUNE_NAMES[SIGNAL_TUNE_COUNT] = {
     [SIGNAL_TUNE_PAC_MAN]            = "PACMAN",
     [SIGNAL_TUNE_ALL_STAR]           = "ALLSTR",
     [SIGNAL_TUNE_IMPERIAL_MARCH]     = "VADER ",
+    [SIGNAL_TUNE_EPIC_SAX]           = "SAX   ",
 };
 
 static bool _note_sounding(const int8_t *sequence, uint16_t elapsed_ticks) {

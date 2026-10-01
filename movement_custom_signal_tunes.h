@@ -520,6 +520,40 @@ static int8_t signal_tune_imperial_march[] = {
     0
 };
 
+/* Sergey Stepanov's sax riff from Run Away (SunStroke Project, 2010), from Piano Letter Notes,
+ * https://pianoletternotes.blogspot.com/2017/10/epic-sax-guy-by-sergey-stepanov.html
+ * D minor like the record, an octave up to suit the piezo. 130 bpm puts a sixteenth at 7 ticks,
+ * and every note gives a tick or two back as a gap so repeats stay tongued like a sax.
+ */
+static int8_t signal_tune_epic_sax[] = {
+    // A, a-a-g-a, A held
+    BUZZER_NOTE_A5, 12, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A5, 6, BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_A5, 6, BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_G5, 6, BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_A5, 19, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A5, 54, BUZZER_NOTE_REST, 2,
+    // again, into the climb up to C
+    BUZZER_NOTE_A5, 12, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A5, 6, BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_A5, 6, BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_G5, 6, BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_A5, 19, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A5, 40, BUZZER_NOTE_REST, 2,
+    // C, A, G, F, then D D E F D, landing on A
+    BUZZER_NOTE_C6, 26, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A5, 26, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_G5, 26, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_F5, 26, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_D5, 12, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_D5, 12, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_E5, 12, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_F5, 12, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_D5, 12, BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A5, 56,
+    0
+};
+
 static int8_t *const signal_tunes[SIGNAL_TUNE_COUNT] = {
     [SIGNAL_TUNE_DEFAULT] = signal_tune_default,
     [SIGNAL_TUNE_ZELDA_SECRET] = signal_tune_zelda_secret,
@@ -538,4 +572,5 @@ static int8_t *const signal_tunes[SIGNAL_TUNE_COUNT] = {
     [SIGNAL_TUNE_PAC_MAN] = signal_tune_pac_man,
     [SIGNAL_TUNE_ALL_STAR] = signal_tune_all_star,
     [SIGNAL_TUNE_IMPERIAL_MARCH] = signal_tune_imperial_march,
+    [SIGNAL_TUNE_EPIC_SAX] = signal_tune_epic_sax,
 };
