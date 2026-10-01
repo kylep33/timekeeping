@@ -82,6 +82,8 @@ static const long_lat_presets_t longLatPresets[] =
     { .name = "  "},  // Default, the long and lat get replaced by what's set in the watch
     { .name = "Sd", .latitude = 3272, .longitude = -11716 },  // San Diego, CA
     { .name = "yo", .latitude = 3775, .longitude = -11959 },  // Yosemite Valley, CA
+    { .name = "WA", .latitude = 4848, .longitude = -12018 },  // Winthrop, WA
+
 };
 
 #endif // SUNRISE_SUNSET_FACE_H_
