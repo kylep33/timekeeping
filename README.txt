@@ -132,4 +132,7 @@ this is configuration and settings etc.
           out
 
     FACE_VOLTAGE - shows your watch voltage. which should be in this range.
-        ____ means its getting close to battery time change.
+        about 2.7V - 3.1V (fresh battery starts near the top and sits around
+        2.9V most of its life). 2.4V or lower means its getting close to
+        battery time change. the clock face also shows the two arrows icon
+        when it hits that, so you dont have to check here.
