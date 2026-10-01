@@ -27,6 +27,9 @@
 
 #include "movement_faces.h"
 
+/* Set to false to build without the pet faces and its mode. */
+#define PET_ENABLED true
+
 /* Every face the watch can show. Modes below pick from these by name, so a face shared
  * across modes still costs one slot and keeps one context.
  */
@@ -46,10 +49,12 @@ typedef enum {
     FACE_MOON_PHASE,
     FACE_TIDE,
     FACE_CLIMB_TIMER,
+#if PET_ENABLED
     FACE_PET,
     FACE_PET_FOOD,
     FACE_PET_PLAY,
     FACE_PET_SING,
+#endif
     FACE_SET_TIME,
     FACE_ADVANCED_ALARM,
     FACE_FINETUNE,
@@ -75,10 +80,12 @@ const watch_face_t watch_faces[] = {
     [FACE_MOON_PHASE] = moon_phase_face,
     [FACE_TIDE] = tide_face,
     [FACE_CLIMB_TIMER] = climb_timer_face,
+#if PET_ENABLED
     [FACE_PET] = pet_face,
     [FACE_PET_FOOD] = pet_food_face,
     [FACE_PET_PLAY] = pet_play_face,
     [FACE_PET_SING] = pet_sing_face,
+#endif
     [FACE_SET_TIME] = set_time_face,
     [FACE_ADVANCED_ALARM] = advanced_alarm_face,
     [FACE_FINETUNE] = finetune_face,
@@ -96,7 +103,9 @@ const watch_face_t watch_faces[] = {
 static const uint8_t daily_faces[] = { FACE_CLOCK, FACE_COUNTDOWN, FACE_STOPWATCH, FACE_COIN_FLIP };
 static const uint8_t climb_faces[] = { FACE_CLOCK, FACE_CLIMB_TIMER };
 static const uint8_t game_faces[] = { FACE_CLOCK, FACE_PROBABILITY, FACE_ENDLESS_RUNNER, FACE_PING, FACE_TAROT };
+#if PET_ENABLED
 static const uint8_t pet_faces[] = { FACE_PET, FACE_PET_FOOD, FACE_PET_PLAY, FACE_PET_SING };
+#endif
 static const uint8_t outdoor_faces[] = { FACE_CLOCK, FACE_SUNRISE_SUNSET, FACE_MOON_PHASE };
 static const uint8_t setup_faces[] = { FACE_CLOCK, FACE_SET_TIME, FACE_ADVANCED_ALARM, FACE_FINETUNE, FACE_NANOSEC, FACE_SETTINGS, FACE_VOLTAGE };
 
@@ -110,7 +119,9 @@ const movement_mode_t movement_modes[] = {
     MODE("DAILY", SIGNAL_TUNE_AXEL_F, daily_faces, PET_CAN_INTERRUPT),
     MODE("CLIMB", SIGNAL_TUNE_ZELDA_SECRET, climb_faces, PET_CANNOT_INTERRUPT),
     MODE("GAME", SIGNAL_TUNE_MARIO_THEME, game_faces, PET_CANNOT_INTERRUPT),
+#if PET_ENABLED
     MODE("PET", SIGNAL_TUNE_KIM_POSSIBLE, pet_faces, PET_CAN_INTERRUPT),
+#endif
     MODE("EARTH", SIGNAL_TUNE_INDIANA_JONES, outdoor_faces, PET_CAN_INTERRUPT),
     MODE("SETUP", SIGNAL_TUNE_MGS_CODEC, setup_faces, PET_CANNOT_INTERRUPT),
 };
