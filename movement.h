@@ -49,6 +49,7 @@ typedef enum {
     SIGNAL_TUNE_PAC_MAN,
     SIGNAL_TUNE_ALL_STAR,
     SIGNAL_TUNE_IMPERIAL_MARCH,
+    SIGNAL_TUNE_EPIC_SAX,
     SIGNAL_TUNE_COUNT,
 } signal_tune_index_t;
 
