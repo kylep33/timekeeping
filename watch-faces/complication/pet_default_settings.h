@@ -32,6 +32,7 @@ typedef struct {
     int8_t *poke;
     int8_t *pat;
     int8_t *wave;
+    int8_t *full;
     int8_t *hungry;
     int8_t *sick;
     int8_t *critical;

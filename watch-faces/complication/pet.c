@@ -43,6 +43,9 @@ static const uint32_t SALT_BEDTIME = 1;
 static const uint32_t SALT_WAKE = 2;
 static const uint32_t SALT_ILLNESS = 3;
 
+// Off the hour so a call never cuts off the hourly chime. Must stay below every call interval.
+static const uint8_t CALL_OFFSET_MIN = 3;
+
 static const uint8_t PET_FORMAT_VERSION = 3;
 static char PET_FILE_NAME[] = "pet.dat";
 
@@ -62,7 +65,6 @@ static pet_t _pet;
 static pet_settings_t _settings;
 static bool _loaded;
 static pet_call_t _pending_call;
-static uint32_t _called_at_s;
 
 static uint8_t _raise(uint8_t stat, uint8_t amount) {
     return (amount > PET_STAT_MAX - stat) ? PET_STAT_MAX : stat + amount;
@@ -70,6 +72,16 @@ static uint8_t _raise(uint8_t stat, uint8_t amount) {
 
 static uint8_t _lower(uint8_t stat, uint8_t amount) {
     return (amount > stat) ? 0 : stat - amount;
+}
+
+// Topping a stat off chirps instead of the usual sound, so you know it's had enough.
+static void _raise_with_sound(uint8_t *stat, uint8_t amount, int8_t *sound) {
+    bool was_full = *stat == PET_STAT_MAX;
+
+    *stat = _raise(*stat, amount);
+
+    bool just_filled = !was_full && *stat == PET_STAT_MAX;
+    movement_play_sequence(just_filled ? _settings.sounds.full : sound, BUZZER_PRIORITY_BUTTON);
 }
 
 static uint16_t _day_number(watch_date_time_t now) {
@@ -336,8 +348,7 @@ void pet_feed(uint8_t nutrition) {
     _settle();
     if (_pet.dead) return;
 
-    _pet.hunger = _raise(_pet.hunger, nutrition);
-    movement_play_sequence(_settings.sounds.eat, BUZZER_PRIORITY_BUTTON);
+    _raise_with_sound(&_pet.hunger, nutrition, _settings.sounds.eat);
     _save();
 }
 
@@ -362,24 +373,20 @@ void pet_murder(void) {
 
 // Prodding is what shakes an illness off, and it takes more than one go.
 static void _poke(void) {
-    _pet.happiness = _raise(_pet.happiness, _settings.poke_happiness_gain);
-
     if (_pet.sick) {
         _pet.pokes_while_sick++;
         if (_pet.pokes_while_sick >= _settings.pokes_to_cure) _pet.sick = false;
     }
 
-    movement_play_sequence(_settings.sounds.poke, BUZZER_PRIORITY_BUTTON);
+    _raise_with_sound(&_pet.happiness, _settings.poke_happiness_gain, _settings.sounds.poke);
 }
 
 static void _pat(void) {
-    _pet.happiness = _raise(_pet.happiness, _settings.pat_happiness_gain);
-    movement_play_sequence(_settings.sounds.pat, BUZZER_PRIORITY_BUTTON);
+    _raise_with_sound(&_pet.happiness, _settings.pat_happiness_gain, _settings.sounds.pat);
 }
 
 static void _wave(void) {
-    _pet.happiness = _raise(_pet.happiness, _settings.wave_happiness_gain);
-    movement_play_sequence(_settings.sounds.wave, BUZZER_PRIORITY_BUTTON);
+    _raise_with_sound(&_pet.happiness, _settings.wave_happiness_gain, _settings.sounds.wave);
 }
 
 typedef void (*pet_interact_effect_t)(void);
@@ -421,15 +428,18 @@ pet_interact_kind_t pet_interact(void) {
     return kind;
 }
 
-static uint32_t _call_interval_s(void) {
-    if (_pet.critical_since_s != 0) return _settings.critical_call_interval_min * SECONDS_PER_MINUTE;
+static uint32_t _call_interval_min(void) {
+    if (_pet.critical_since_s != 0) return _settings.critical_call_interval_min;
 
-    return _settings.call_interval_min * SECONDS_PER_MINUTE;
+    return _settings.call_interval_min;
+}
+
+static bool _is_call_minute(watch_date_time_t now) {
+    return now.unit.minute % _call_interval_min() == CALL_OFFSET_MIN;
 }
 
 static pet_call_t _overdue_call(void) {
     if (_pet.dead || _pet.asleep) return PET_CALL_NONE;
-    if (_pet.settled_at_s - _called_at_s < _call_interval_s()) return PET_CALL_NONE;
 
     if (_pet.critical_since_s != 0) return PET_CALL_CRITICAL;
     if (_pet.sick) return PET_CALL_SICK;
@@ -463,6 +473,7 @@ bool pet_wants_to_call(void) {
     if (!movement_mode_pet_enabled(movement_get_mode())) return false;
 
     _settle();
+    if (!_is_call_minute(movement_get_local_date_time())) return false;
     if (_pending_call == PET_CALL_NONE) _pending_call = _overdue_call();
 
     return _pending_call != PET_CALL_NONE;
@@ -472,6 +483,5 @@ void pet_call(void) {
     if (_pending_call == PET_CALL_NONE) return;
 
     movement_play_sequence(_call_tune(_pending_call), BUZZER_PRIORITY_ALARM);
-    _called_at_s = _pet.settled_at_s;
     _pending_call = PET_CALL_NONE;
 }
