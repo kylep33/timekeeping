@@ -37,6 +37,7 @@ FACE_CLOCK, FACE_COUNTDOWN, FACE_STOPWATCH, FACE_COIN_FLIP
 
     FACE_COUNTDOWN - for 5 secnods after opening this face, each tap will add
         1 minute, you press start (bottom right). nifty!
+        to reset this. pause the timer, then short press the light. it will reset. cycle back around to reactivate the 5s of tap
 
     FACE_STOPWATCH - a good stopwatch. to use it is  obvious
 
