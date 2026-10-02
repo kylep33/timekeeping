@@ -119,6 +119,17 @@ static int8_t _tune_wave[] = {
     0
 };
 
+static int8_t _tune_full[] = {
+    BUZZER_NOTE_C7, 2,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_E7, 2,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_G7, 2,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_C8, 4,
+    0
+};
+
 const pet_settings_t pet_default_settings = {
     // full to empty in about two days, so a day away is fine and a long weekend is not
     .hunger_drain_s_per_point = 1800,
@@ -159,6 +170,7 @@ const pet_settings_t pet_default_settings = {
         .poke = _tune_poke,
         .pat = _tune_pat,
         .wave = _tune_wave,
+        .full = _tune_full,
         .hungry = _tune_hungry,
         .sick = _tune_sick,
         .critical = _tune_critical,
