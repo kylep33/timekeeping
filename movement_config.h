@@ -28,7 +28,7 @@
 #include "movement_faces.h"
 
 /* Set to false to build without the pet faces and its mode. */
-#define PET_ENABLED true
+#define PET_ENABLED false
 
 /* Every face the watch can show. Modes below pick from these by name, so a face shared
  * across modes still costs one slot and keeps one context.

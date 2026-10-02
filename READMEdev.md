@@ -103,3 +103,30 @@ each one contains.
 git fetch upstream
 git merge upstream/main
 ```
+
+um okay here is how i am flashing my unit
+1. copy to mattbot
+2. install deps
+```
+sudo apt install gcc-arm-none-eabi libnewlib-arm-none-eabi
+arm-none-eabi-gcc --version   # confirm it's on PATH
+
+3. compile ur crap!!
+make clean
+make BOARD=sensorwatch_pro DISPLAY=custom
+
+4. now get ready to copy it!
+cd build
+ls firmware.uf2
+
+5. okay new terminal
+sudo picocom -b 115200 /dev/ttyACM0
+help
+flash
+
+
+
+7.? in a terminal that is not the picocom terminal
+cd ~/dev/timekeeping/build 
+sudo cp firmware.uf2 /media/kile/WATCHBOOT/
+sync
