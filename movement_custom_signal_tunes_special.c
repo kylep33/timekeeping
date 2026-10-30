@@ -36,6 +36,7 @@ int8_t signal_tune_birthday[] = {
     BUZZER_NOTE_E6, 16, BUZZER_NOTE_C6, 16, BUZZER_NOTE_D6, 16, BUZZER_NOTE_C6, 32,
     // a breath before it loops
     BUZZER_NOTE_REST, 32,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0
 };
 
@@ -68,6 +69,7 @@ int8_t signal_tune_edmund_fitzgerald[] = {
     BUZZER_NOTE_E5, 21,
     // m153: F#, then down to B, left ringing to the end
     BUZZER_NOTE_F5SHARP_G5FLAT, 19, BUZZER_NOTE_B4, 84,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
 
     0
 };

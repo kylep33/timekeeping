@@ -31,6 +31,7 @@ static int8_t signal_tune_default[] = {
     BUZZER_NOTE_C8, 5,
     BUZZER_NOTE_REST, 6,
     BUZZER_NOTE_C8, 5,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0
 };
 
@@ -43,6 +44,7 @@ static int8_t signal_tune_zelda_secret[] = {
     BUZZER_NOTE_E5, 8,
     BUZZER_NOTE_G5SHARP_A5FLAT, 8,
     BUZZER_NOTE_C6, 20,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0
 };
 
@@ -60,6 +62,7 @@ static int8_t signal_tune_mario_theme[] = {
     BUZZER_NOTE_G6, 8,
     BUZZER_NOTE_REST, 30,
     BUZZER_NOTE_G5, 8,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0
 };
 
@@ -85,6 +88,7 @@ static int8_t signal_tune_mgs_codec[] = {
     BUZZER_NOTE_C6, 1,
     BUZZER_NOTE_G5SHARP_A5FLAT, 1,
     BUZZER_NOTE_C6, 1,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0
 };
 
@@ -99,6 +103,7 @@ static int8_t signal_tune_kim_possible[] = {
     BUZZER_NOTE_REST, 2,
     BUZZER_NOTE_G7, 6,
     BUZZER_NOTE_G4, 2,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0
 };
 
@@ -114,6 +119,7 @@ static int8_t signal_tune_power_rangers[] = {
     BUZZER_NOTE_F8, 6,
     BUZZER_NOTE_REST, 8,
     BUZZER_NOTE_D8, 6,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0
 };
 
@@ -131,6 +137,7 @@ static int8_t signal_tune_layla[] = {
     BUZZER_NOTE_C7, 5,
     BUZZER_NOTE_REST, 1,
     BUZZER_NOTE_D7, 20,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0
 };
 
@@ -150,6 +157,7 @@ static int8_t signal_tune_harry_potter_short[] = {
     BUZZER_NOTE_A6, 24,
     BUZZER_NOTE_REST, 1,
     BUZZER_NOTE_F6SHARP_G6FLAT, 24,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0
 };
 
@@ -182,6 +190,7 @@ static int8_t signal_tune_harry_potter_long[] = {
     BUZZER_NOTE_F6, 8,
     BUZZER_NOTE_REST, 1,
     BUZZER_NOTE_B5, 24,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
 
     0
 };
@@ -206,6 +215,7 @@ static int8_t signal_tune_jurassic_park[] = {
     BUZZER_NOTE_F5SHARP_G5FLAT, 13,
     BUZZER_NOTE_REST, 13,
     BUZZER_NOTE_E5, 13,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0,
 };
 
@@ -233,6 +243,7 @@ static int8_t signal_tune_evangelion[] = {
     BUZZER_NOTE_F5, 7,
     BUZZER_NOTE_REST, 7,
     BUZZER_NOTE_G5, 13,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0,
 };
 
@@ -285,6 +296,7 @@ static int8_t signal_tune_axel_f[] = {
     BUZZER_NOTE_G5, 13,
     BUZZER_NOTE_REST, 2,
     BUZZER_NOTE_F5, 27,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0
 };
 
@@ -321,6 +333,7 @@ static int8_t signal_tune_indiana_jones[] = {
     BUZZER_NOTE_D6, 22,
     BUZZER_NOTE_REST, 4,
     BUZZER_NOTE_E6, 20,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0
 };
 
@@ -348,6 +361,7 @@ static int8_t signal_tune_simpsons[] = {
     BUZZER_NOTE_F5SHARP_G5FLAT, 10,
     BUZZER_NOTE_REST, 2,
     BUZZER_NOTE_G5, 48,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0
 };
 
@@ -414,6 +428,7 @@ static int8_t signal_tune_pac_man[] = {
     BUZZER_NOTE_A4, 8,
     BUZZER_NOTE_REST, 1,
     BUZZER_NOTE_B4, 15,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0
 };
 
@@ -463,6 +478,7 @@ static int8_t signal_tune_all_star[] = {
     BUZZER_NOTE_E4, 14,            // shed (slide start)
     BUZZER_NOTE_REST, 4,
     BUZZER_NOTE_D4, 72,            // shed (held)
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0
 };
 
@@ -517,6 +533,7 @@ static int8_t signal_tune_imperial_march[] = {
     BUZZER_NOTE_C5, 6,
     BUZZER_NOTE_REST, 2,
     BUZZER_NOTE_E5, 64,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0
 };
 
@@ -551,6 +568,7 @@ static int8_t signal_tune_epic_sax[] = {
     BUZZER_NOTE_F5, 12, BUZZER_NOTE_REST, 2,
     BUZZER_NOTE_D5, 12, BUZZER_NOTE_REST, 2,
     BUZZER_NOTE_A5, 56,
+    BUZZER_NOTE_REST, TUNE_END_REST_TICKS,
     0
 };
 

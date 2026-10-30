@@ -40,6 +40,7 @@ TUNES_H = REPO / "movement_custom_signal_tunes.h"
 SPECIAL_TUNES_C = REPO / "movement_custom_signal_tunes_special.c"
 SPECIAL_PREFIX = "SPECIAL_"
 NOTES_H = REPO / "watch-library" / "shared" / "watch" / "watch_tcc.h"
+MOVEMENT_H = REPO / "movement.h"
 
 # cb_watch_buzzer_seq() runs off a 64 Hz timer; one duration unit is one tick.
 TICK_MS = 1000.0 / 64.0
@@ -83,6 +84,13 @@ def parse_notes(path):
     return notes
 
 
+# tunes name some durations, e.g. TUNE_END_REST_TICKS
+DURATION_DEFINES = {
+    name: int(value)
+    for name, value in re.findall(r"^#define (\w+)\s+(\d+)\s*$", MOVEMENT_H.read_text(), re.M)
+}
+
+
 def _parse_array_body(body, notes, label):
     """Turn a brace-delimited array body into a flat [value, duration, ...] list.
 
@@ -96,6 +104,8 @@ def _parse_array_body(body, notes, label):
             continue
         if token in notes:
             seq.append(notes[token][0])
+        elif token in DURATION_DEFINES:
+            seq.append(DURATION_DEFINES[token])
         else:
             try:
                 seq.append(int(token, 0))

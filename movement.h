@@ -31,6 +31,9 @@
 #include "utz.h"
 #include "lis2dw.h"
 
+// 1 s at the 64 Hz sequence rate, so a tune on repeat has a gap before it starts over
+#define TUNE_END_REST_TICKS 64
+
 typedef enum {
     SIGNAL_TUNE_DEFAULT,
     SIGNAL_TUNE_ZELDA_SECRET,
