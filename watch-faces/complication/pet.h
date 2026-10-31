@@ -99,7 +99,11 @@ uint8_t pet_species_id(void);
 void pet_feed(uint8_t nutrition);
 
 /// @brief Raises happiness for a performance. Call once when a song actually starts.
-void pet_sing(void);
+/// @return true if this song topped happiness off, so the face can chirp once the song is over.
+bool pet_sing(void);
+
+/// @brief The chirp for a stat hitting full, for when it had to wait its turn.
+void pet_play_full(void);
 
 /// @brief Nudges the awake pet with a random interaction, or scolds you for waking it.
 /// @return which interaction played, or PET_INTERACT_COUNT if the pet did nothing.

@@ -51,20 +51,10 @@ static char PET_FILE_NAME[] = "pet.dat";
 
 static const pet_species_id_t HATCH_SPECIES = PET_SPECIES_SMILEY;
 
-typedef enum {
-    PET_CALL_NONE,
-    PET_CALL_HUNGRY,
-    PET_CALL_SICK,
-    PET_CALL_CRITICAL,
-    PET_CALL_SLEEPING,
-    PET_CALL_WAKING,
-    PET_CALL_DIED,
-} pet_call_t;
-
 static pet_t _pet;
 static pet_settings_t _settings;
 static bool _loaded;
-static pet_call_t _pending_call;
+static int8_t *_pending_call;
 
 static uint8_t _raise(uint8_t stat, uint8_t amount) {
     return (amount > PET_STAT_MAX - stat) ? PET_STAT_MAX : stat + amount;
@@ -74,13 +64,19 @@ static uint8_t _lower(uint8_t stat, uint8_t amount) {
     return (amount > stat) ? 0 : stat - amount;
 }
 
-// Topping a stat off chirps instead of the usual sound, so you know it's had enough.
-static void _raise_with_sound(uint8_t *stat, uint8_t amount, int8_t *sound) {
+// True when this raise is the one that topped it off.
+static bool _raise_to_full(uint8_t *stat, uint8_t amount) {
     bool was_full = *stat == PET_STAT_MAX;
 
     *stat = _raise(*stat, amount);
 
-    bool just_filled = !was_full && *stat == PET_STAT_MAX;
+    return !was_full && *stat == PET_STAT_MAX;
+}
+
+// Topping a stat off chirps instead of the usual sound, so you know it's had enough.
+static void _raise_with_sound(uint8_t *stat, uint8_t amount, int8_t *sound) {
+    bool just_filled = _raise_to_full(stat, amount);
+
     movement_play_sequence(just_filled ? _settings.sounds.full : sound, BUZZER_PRIORITY_BUTTON);
 }
 
@@ -241,7 +237,7 @@ static void _settle_mortality(uint32_t now_s) {
     if (now_s - _pet.critical_since_s < _settings.critical_grace_hours * SECONDS_PER_HOUR) return;
 
     _pet.dead = true;
-    _pending_call = PET_CALL_DIED;
+    _pending_call = _settings.sounds.died;
     _save();
 }
 
@@ -254,7 +250,7 @@ static void _settle_sleep(watch_date_time_t now, uint32_t now_s) {
     if (asleep == _pet.asleep) return;
 
     _pet.asleep = asleep;
-    _pending_call = asleep ? PET_CALL_SLEEPING : PET_CALL_WAKING;
+    _pending_call = asleep ? _settings.sounds.sleeping : _settings.sounds.waking;
     _save();
 }
 
@@ -316,7 +312,7 @@ void pet_hatch(void) {
     _pet.health = PET_STAT_MAX;
 
     _loaded = true;
-    _pending_call = PET_CALL_NONE;
+    _pending_call = NULL;
     _save();
 }
 
@@ -352,12 +348,18 @@ void pet_feed(uint8_t nutrition) {
     _save();
 }
 
-void pet_sing(void) {
+bool pet_sing(void) {
     _settle();
-    if (_pet.dead) return;
+    if (_pet.dead) return false;
 
-    _pet.happiness = _raise(_pet.happiness, _settings.sing_happiness_gain);
+    bool just_filled = _raise_to_full(&_pet.happiness, _settings.sing_happiness_gain);
     _save();
+
+    return just_filled;
+}
+
+void pet_play_full(void) {
+    movement_play_sequence(_settings.sounds.full, BUZZER_PRIORITY_BUTTON);
 }
 
 void pet_murder(void) {
@@ -366,7 +368,7 @@ void pet_murder(void) {
 
     _pet.dead = true;
     // Anything it was about to call out would play over its own scream.
-    _pending_call = PET_CALL_NONE;
+    _pending_call = NULL;
     movement_play_sequence(_settings.sounds.murdered, BUZZER_PRIORITY_BUTTON);
     _save();
 }
@@ -438,35 +440,31 @@ static bool _is_call_minute(watch_date_time_t now) {
     return now.unit.minute % _call_interval_min() == CALL_OFFSET_MIN;
 }
 
-static pet_call_t _overdue_call(void) {
-    if (_pet.dead || _pet.asleep) return PET_CALL_NONE;
+// 0 when content, otherwise how many plea thresholds the stat has sunk under.
+static uint8_t _plea_level(uint8_t stat) {
+    uint8_t level = 0;
 
-    if (_pet.critical_since_s != 0) return PET_CALL_CRITICAL;
-    if (_pet.sick) return PET_CALL_SICK;
-    if (_pet.hunger <= _settings.hungry_threshold) return PET_CALL_HUNGRY;
+    while (level < PET_PLEA_LEVELS && stat < _settings.plea_below[level]) level++;
 
-    return PET_CALL_NONE;
+    return level;
 }
 
-static int8_t *_call_tune(pet_call_t call) {
+static int8_t *_overdue_call(void) {
     const pet_sounds_t *sounds = &_settings.sounds;
 
-    switch (call) {
-        case PET_CALL_HUNGRY:
-            return sounds->hungry;
-        case PET_CALL_SICK:
-            return sounds->sick;
-        case PET_CALL_CRITICAL:
-            return sounds->critical;
-        case PET_CALL_SLEEPING:
-            return sounds->sleeping;
-        case PET_CALL_WAKING:
-            return sounds->waking;
-        case PET_CALL_DIED:
-            return sounds->died;
-        default:
-            return NULL;
-    }
+    if (_pet.dead || _pet.asleep) return NULL;
+
+    if (_pet.critical_since_s != 0) return sounds->critical;
+    if (_pet.sick) return sounds->sick;
+
+    uint8_t hunger_level = _plea_level(_pet.hunger);
+    uint8_t lonely_level = _plea_level(_pet.happiness);
+
+    // One call per check, so the worse need gets it and food wins a tie.
+    if (hunger_level > 0 && hunger_level >= lonely_level) return sounds->hungry[hunger_level - 1];
+    if (lonely_level > 0) return sounds->lonely[lonely_level - 1];
+
+    return NULL;
 }
 
 bool pet_wants_to_call(void) {
@@ -474,14 +472,14 @@ bool pet_wants_to_call(void) {
 
     _settle();
     if (!_is_call_minute(movement_get_local_date_time())) return false;
-    if (_pending_call == PET_CALL_NONE) _pending_call = _overdue_call();
+    if (_pending_call == NULL) _pending_call = _overdue_call();
 
-    return _pending_call != PET_CALL_NONE;
+    return _pending_call != NULL;
 }
 
 void pet_call(void) {
-    if (_pending_call == PET_CALL_NONE) return;
+    if (_pending_call == NULL) return;
 
-    movement_play_sequence(_call_tune(_pending_call), BUZZER_PRIORITY_ALARM);
-    _pending_call = PET_CALL_NONE;
+    movement_play_sequence(_pending_call, BUZZER_PRIORITY_ALARM);
+    _pending_call = NULL;
 }

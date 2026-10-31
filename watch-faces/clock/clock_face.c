@@ -42,6 +42,9 @@
 #define CLOCK_FACE_LOW_BATTERY_VOLTAGE_THRESHOLD 2400
 #endif
 
+#define HOURLY_CHIME_INTERVAL_MIN 60
+#define ANNOY_CHIME_INTERVAL_MIN 15
+
 static void clock_indicate(watch_indicator_t indicator, bool on) {
     if (on) {
         watch_set_indicator(indicator);
@@ -277,7 +280,8 @@ movement_watch_face_advisory_t clock_face_advise(void *context) {
 
     if (state->time_signal_enabled) {
         watch_date_time_t date_time = movement_get_local_date_time();
-        retval.wants_background_task = date_time.unit.minute == 0;
+        uint8_t chime_interval_min = movement_annoy_enabled() ? ANNOY_CHIME_INTERVAL_MIN : HOURLY_CHIME_INTERVAL_MIN;
+        retval.wants_background_task = date_time.unit.minute % chime_interval_min == 0;
     }
 
     return retval;

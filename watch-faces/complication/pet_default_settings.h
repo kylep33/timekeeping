@@ -27,13 +27,17 @@
 
 #include <stdint.h>
 
+// ask, beg, scream, each one a stat drops further
+#define PET_PLEA_LEVELS 3
+
 typedef struct {
     int8_t *eat;
     int8_t *poke;
     int8_t *pat;
     int8_t *wave;
     int8_t *full;
-    int8_t *hungry;
+    int8_t *hungry[PET_PLEA_LEVELS];
+    int8_t *lonely[PET_PLEA_LEVELS];
     int8_t *sick;
     int8_t *critical;
     int8_t *sleeping;
@@ -61,6 +65,7 @@ typedef struct {
     uint8_t neglect_threshold;
     uint8_t hungry_threshold;
     uint8_t sad_threshold;
+    uint8_t plea_below[PET_PLEA_LEVELS];    ///< descending, a stat under each one escalates the call
     uint8_t illness_health_threshold;
     uint8_t pokes_to_cure;
     uint8_t poke_happiness_gain;

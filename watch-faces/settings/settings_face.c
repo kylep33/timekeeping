@@ -111,6 +111,19 @@ static void signal_setting_advance(void) {
     movement_play_signal();
 }
 
+static void annoy_setting_display(uint8_t subsecond) {
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "ANNOY", "AN");
+    if (subsecond % 2) {
+        if (movement_annoy_enabled()) watch_display_text(WATCH_POSITION_BOTTOM, "  on  ");
+        else watch_display_text(WATCH_POSITION_BOTTOM, " off  ");
+    } else {
+        watch_display_text(WATCH_POSITION_BOTTOM, "      ");
+    }
+}
+
+static void annoy_setting_advance(void) {
+    movement_set_annoy_enabled(!movement_annoy_enabled());
+}
 
 static void alarm_setting_display(uint8_t subsecond) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "ALM", "AL");
@@ -313,7 +326,7 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         settings_state_t *state = (settings_state_t *)*context_ptr;
         int8_t current_setting = 0;
 
-        state->num_settings = 6; // baseline, without LED settings
+        state->num_settings = 7; // baseline, without LED settings
 #ifndef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
         state->num_settings++;
 #endif
@@ -339,6 +352,9 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         current_setting++;
         state->settings_screens[current_setting].display = signal_setting_display;
         state->settings_screens[current_setting].advance = signal_setting_advance;
+        current_setting++;
+        state->settings_screens[current_setting].display = annoy_setting_display;
+        state->settings_screens[current_setting].advance = annoy_setting_advance;
         current_setting++;
         state->settings_screens[current_setting].display = alarm_setting_display;
         state->settings_screens[current_setting].advance = alarm_setting_advance;

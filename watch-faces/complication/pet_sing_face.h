@@ -44,6 +44,7 @@ typedef struct {
     bool singing;            ///< true from the ALARM press until the tune finishes
     uint8_t tune;            ///< which signal_tune_index_t is currently playing
     uint16_t elapsed_ticks;  ///< 64Hz ticks into that tune, the same clock the buzzer itself reads on
+    bool chirp_after_song;   ///< the song topped happiness off, but the full chirp can't play over it
 } pet_sing_face_state_t;
 
 void pet_sing_face_setup(uint8_t watch_face_index, void ** context_ptr);

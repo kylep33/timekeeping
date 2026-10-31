@@ -107,7 +107,7 @@ static void _sing(pet_sing_face_state_t *state) {
         return;
     }
 
-    pet_sing();
+    state->chirp_after_song = pet_sing();
     pet_species_current()->sing_start();
 
     state->tune = _random_tune();
@@ -148,6 +148,7 @@ bool pet_sing_face_loop(movement_event_t event, void *context) {
                 if (!movement_is_buzzing()) {
                     state->singing = false;
                     movement_request_tick_frequency(IDLE_TICK_FREQUENCY_HZ);
+                    if (state->chirp_after_song) pet_play_full();
                 }
             }
             _redraw(state);

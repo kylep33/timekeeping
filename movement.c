@@ -857,6 +857,13 @@ void movement_set_signal_volume(watch_buzzer_volume_t value) {
     movement_state.signal_volume = value;
 }
 
+bool movement_annoy_enabled(void) {
+    return movement_state.annoy_enabled;
+}
+void movement_set_annoy_enabled(bool value) {
+    movement_state.annoy_enabled = value;
+}
+
 watch_buzzer_volume_t movement_alarm_volume(void) {
     return movement_state.alarm_volume;
 }

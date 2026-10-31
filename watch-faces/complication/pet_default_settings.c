@@ -25,12 +25,141 @@
 #include "pet_default_settings.h"
 #include "movement.h"
 
-static int8_t _tune_hungry[] = {
-    BUZZER_NOTE_E7, 3,
+/* Hunger calls open on a low tummy growl and say "I'm hun-gry", short short long.
+ * Lonely calls skip the growl and go "PLAY with ME", long short long and rising,
+ * so the two can be told apart without looking.
+ */
+static int8_t _tune_hungry_ask[] = {
+    BUZZER_NOTE_C4, 3,
+    BUZZER_NOTE_B3, 3,
+    BUZZER_NOTE_C4, 3,
+    BUZZER_NOTE_B3, 3,
+    BUZZER_NOTE_REST, 6,
+    BUZZER_NOTE_E6, 5,
     BUZZER_NOTE_REST, 2,
-    BUZZER_NOTE_E7, 3,
+    BUZZER_NOTE_G6, 5,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_E6, 10,
+    BUZZER_NOTE_D6, 6,
+    0
+};
+
+// "I'm REAL-ly hun-gry", with a longer growl and a sagging end.
+static int8_t _tune_hungry_beg[] = {
+    BUZZER_NOTE_C4, 3,
+    BUZZER_NOTE_B3, 3,
+    BUZZER_NOTE_C4, 3,
+    BUZZER_NOTE_B3, 3,
+    BUZZER_NOTE_C4, 3,
+    BUZZER_NOTE_B3, 3,
+    BUZZER_NOTE_REST, 6,
+    BUZZER_NOTE_E6, 4,
     BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A6, 9,
+    BUZZER_NOTE_F6, 4,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_G6, 5,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_E6, 10,
+    BUZZER_NOTE_D6, 6,
+    BUZZER_NOTE_C6, 10,
+    0
+};
+
+// "IM HUN-GRYYY IM HUN-GRYYYY", an octave up with the last syllable wailing.
+static int8_t _tune_hungry_scream[] = {
+    BUZZER_NOTE_C4, 3,
+    BUZZER_NOTE_B3, 3,
+    BUZZER_NOTE_C4, 3,
+    BUZZER_NOTE_B3, 3,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_E7, 5,
+    BUZZER_NOTE_REST, 1,
     BUZZER_NOTE_G7, 6,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_A7, 2,
+    BUZZER_NOTE_G7SHARP_A7FLAT, 2,
+    BUZZER_NOTE_A7, 2,
+    BUZZER_NOTE_G7SHARP_A7FLAT, 2,
+    BUZZER_NOTE_A7, 2,
+    BUZZER_NOTE_G7SHARP_A7FLAT, 2,
+    BUZZER_NOTE_F7, 6,
+    BUZZER_NOTE_REST, 6,
+    BUZZER_NOTE_E7, 5,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_G7, 6,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_A7, 2,
+    BUZZER_NOTE_G7SHARP_A7FLAT, 2,
+    BUZZER_NOTE_A7, 2,
+    BUZZER_NOTE_G7SHARP_A7FLAT, 2,
+    BUZZER_NOTE_A7, 2,
+    BUZZER_NOTE_G7SHARP_A7FLAT, 2,
+    BUZZER_NOTE_A7, 2,
+    BUZZER_NOTE_G7SHARP_A7FLAT, 2,
+    BUZZER_NOTE_A7, 2,
+    BUZZER_NOTE_G7SHARP_A7FLAT, 2,
+    BUZZER_NOTE_F7, 4,
+    BUZZER_NOTE_E7, 4,
+    BUZZER_NOTE_D7, 10,
+    0
+};
+
+static int8_t _tune_lonely_ask[] = {
+    BUZZER_NOTE_G6, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_E6, 4,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_C7, 12,
+    0
+};
+
+// "PLAY with ME pleeease", the please sliding down like a whine.
+static int8_t _tune_lonely_beg[] = {
+    BUZZER_NOTE_G6, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_E6, 4,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_C7, 10,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_D7, 6,
+    BUZZER_NOTE_C7, 3,
+    BUZZER_NOTE_B6, 3,
+    BUZZER_NOTE_A6, 3,
+    BUZZER_NOTE_G6, 12,
+    0
+};
+
+// "PLAY WITH MEEE PLAY WITH MEEEE PLEASE", an octave up with the ME wailing.
+static int8_t _tune_lonely_scream[] = {
+    BUZZER_NOTE_G7, 7,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_E7, 4,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_C8, 2,
+    BUZZER_NOTE_B7, 2,
+    BUZZER_NOTE_C8, 2,
+    BUZZER_NOTE_B7, 2,
+    BUZZER_NOTE_C8, 2,
+    BUZZER_NOTE_B7, 2,
+    BUZZER_NOTE_REST, 6,
+    BUZZER_NOTE_G7, 7,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_E7, 4,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_C8, 2,
+    BUZZER_NOTE_B7, 2,
+    BUZZER_NOTE_C8, 2,
+    BUZZER_NOTE_B7, 2,
+    BUZZER_NOTE_C8, 2,
+    BUZZER_NOTE_B7, 2,
+    BUZZER_NOTE_C8, 2,
+    BUZZER_NOTE_B7, 2,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_D8, 4,
+    BUZZER_NOTE_C8, 4,
+    BUZZER_NOTE_A7, 4,
+    BUZZER_NOTE_G7, 12,
     0
 };
 
@@ -154,6 +283,7 @@ const pet_settings_t pet_default_settings = {
     .neglect_threshold = 20,
     .hungry_threshold = 35,
     .sad_threshold = 35,
+    .plea_below = { 80, 60, 40 },
     .illness_health_threshold = 30,
     .pokes_to_cure = 3,
 
@@ -171,7 +301,8 @@ const pet_settings_t pet_default_settings = {
         .pat = _tune_pat,
         .wave = _tune_wave,
         .full = _tune_full,
-        .hungry = _tune_hungry,
+        .hungry = { _tune_hungry_ask, _tune_hungry_beg, _tune_hungry_scream },
+        .lonely = { _tune_lonely_ask, _tune_lonely_beg, _tune_lonely_scream },
         .sick = _tune_sick,
         .critical = _tune_critical,
         .sleeping = _tune_sleeping,
