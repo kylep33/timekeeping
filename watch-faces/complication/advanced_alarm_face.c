@@ -206,7 +206,7 @@ static void _alarm_update_alarm_enabled(alarm_state_t *state) {
             }
         }
     }
-    movement_set_alarm_enabled(active_alarms);
+    movement_set_alarm_enabled(active_alarms && !movement_alarms_muted());
 }
 
 static signal_tune_index_t _signal_tune_for(uint8_t tune) {
@@ -465,7 +465,7 @@ bool advanced_alarm_face_loop(movement_event_t event, void *context) {
         } else _wait_ticks = -1;
         break;
     case EVENT_BACKGROUND_TASK:
-        _alarm_play(state);
+        if (!movement_alarms_muted()) _alarm_play(state);
         // one time alarm? -> erase it
         if (state->alarm[state->alarm_playing_idx].day == ALARM_DAY_ONE_TIME) {
             state->alarm[state->alarm_playing_idx].day = ALARM_DAY_EACH_DAY;

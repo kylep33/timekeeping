@@ -60,6 +60,9 @@ typedef enum {
     FACE_FINETUNE,
     FACE_NANOSEC,
     FACE_SETTINGS,
+    FACE_CHIME_SETTINGS,
+    FACE_ALARM_SETTINGS,
+    FACE_LED_SETTINGS,
     FACE_VOLTAGE,
     FACE_MODE_SELECT,
 } face_index_t;
@@ -91,6 +94,9 @@ const watch_face_t watch_faces[] = {
     [FACE_FINETUNE] = finetune_face,
     [FACE_NANOSEC] = nanosec_face,
     [FACE_SETTINGS] = settings_face,
+    [FACE_CHIME_SETTINGS] = chime_settings_face,
+    [FACE_ALARM_SETTINGS] = alarm_settings_face,
+    [FACE_LED_SETTINGS] = led_settings_face,
     [FACE_VOLTAGE] = voltage_face,
     [FACE_MODE_SELECT] = mode_select_face,
 };
@@ -107,7 +113,7 @@ static const uint8_t game_faces[] = { FACE_CLOCK, FACE_PROBABILITY, FACE_ENDLESS
 static const uint8_t pet_faces[] = { FACE_PET, FACE_PET_FOOD, FACE_PET_PLAY, FACE_PET_SING };
 #endif
 static const uint8_t outdoor_faces[] = { FACE_CLOCK, FACE_SUNRISE_SUNSET, FACE_MOON_PHASE };
-static const uint8_t setup_faces[] = { FACE_CLOCK, FACE_SET_TIME, FACE_ADVANCED_ALARM, FACE_FINETUNE, FACE_NANOSEC, FACE_SETTINGS, FACE_VOLTAGE };
+static const uint8_t setup_faces[] = { FACE_CLOCK, FACE_SET_TIME, FACE_ADVANCED_ALARM, FACE_FINETUNE, FACE_NANOSEC, FACE_SETTINGS, FACE_CHIME_SETTINGS, FACE_ALARM_SETTINGS, FACE_LED_SETTINGS, FACE_VOLTAGE };
 
 #define MODE(display_name, tune, faces, pet) { display_name, tune, faces, sizeof(faces), pet }
 

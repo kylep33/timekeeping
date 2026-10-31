@@ -111,18 +111,30 @@ static void signal_setting_advance(void) {
     movement_play_signal();
 }
 
-static void annoy_setting_display(uint8_t subsecond) {
-    watch_display_text_with_fallback(WATCH_POSITION_TOP, "ANNOY", "AN");
+static void toggle_setting_display(const char *label, const char *fallback, bool on, uint8_t subsecond) {
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, label, fallback);
     if (subsecond % 2) {
-        if (movement_annoy_enabled()) watch_display_text(WATCH_POSITION_BOTTOM, "  on  ");
+        if (on) watch_display_text(WATCH_POSITION_BOTTOM, "  on  ");
         else watch_display_text(WATCH_POSITION_BOTTOM, " off  ");
     } else {
         watch_display_text(WATCH_POSITION_BOTTOM, "      ");
     }
 }
 
+static void annoy_setting_display(uint8_t subsecond) {
+    toggle_setting_display("ANNOY", "AN", movement_annoy_enabled(), subsecond);
+}
+
 static void annoy_setting_advance(void) {
     movement_set_annoy_enabled(!movement_annoy_enabled());
+}
+
+static void mari_setting_display(uint8_t subsecond) {
+    toggle_setting_display("MARI ", "MA", movement_mari_enabled(), subsecond);
+}
+
+static void mari_setting_advance(void) {
+    movement_set_mari_enabled(!movement_mari_enabled());
 }
 
 static void alarm_setting_display(uint8_t subsecond) {
@@ -154,6 +166,14 @@ static void alarm_setting_advance(void) {
 
     alarm_setting_display(1);
     movement_play_alarm();
+}
+
+static void mute_setting_display(uint8_t subsecond) {
+    toggle_setting_display("MUTE ", "MU", movement_alarms_muted(), subsecond);
+}
+
+static void mute_setting_advance(void) {
+    movement_set_alarms_muted(!movement_alarms_muted());
 }
 
 static void timeout_setting_display(uint8_t subsecond) {
@@ -319,89 +339,87 @@ static void git_hash_setting_advance(void) {
     return;
 }
 
+static const settings_screen_t STANDARD_SCREENS[] = {
+    { clock_setting_display, clock_setting_advance },
+    { beep_setting_display, beep_setting_advance },
+    { timeout_setting_display, timeout_setting_advance },
+#ifndef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
+    { low_energy_setting_display, low_energy_setting_advance },
+#endif
+#ifdef BUILD_GIT_HASH
+    { git_hash_setting_display, git_hash_setting_advance },
+#endif
+};
+
+static const settings_screen_t CHIME_SCREENS[] = {
+    { signal_setting_display, signal_setting_advance },
+    { annoy_setting_display, annoy_setting_advance },
+    { mari_setting_display, mari_setting_advance },
+};
+
+static const settings_screen_t ALARM_SCREENS[] = {
+    { alarm_setting_display, alarm_setting_advance },
+    { mute_setting_display, mute_setting_advance },
+};
+
+// Duration first, so the color screens that keep the LED lit start at 1.
+static const uint8_t LED_COLOR_START = 1;
+
+static const settings_screen_t LED_SCREENS[] = {
+    { led_duration_setting_display, led_duration_setting_advance },
+#ifdef WATCH_RED_TCC_CHANNEL
+    { red_led_setting_display, red_led_setting_advance },
+#endif
+#ifdef WATCH_GREEN_TCC_CHANNEL
+    { green_led_setting_display, green_led_setting_advance },
+#endif
+#ifdef WATCH_BLUE_TCC_CHANNEL
+    { blue_led_setting_display, blue_led_setting_advance },
+#endif
+};
+
+static void setup_screens(void **context_ptr, const settings_screen_t *screens, uint8_t num_settings, uint8_t led_color_start, uint8_t led_color_end) {
+    if (*context_ptr != NULL) return;
+
+    settings_state_t *state = malloc(sizeof(settings_state_t));
+    state->settings_screens = screens;
+    state->num_settings = num_settings;
+    state->led_color_start = led_color_start;
+    state->led_color_end = led_color_end;
+    *context_ptr = state;
+}
+
 void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
-    if (*context_ptr == NULL) {
-        *context_ptr = malloc(sizeof(settings_state_t));
-        settings_state_t *state = (settings_state_t *)*context_ptr;
-        int8_t current_setting = 0;
+    setup_screens(context_ptr, STANDARD_SCREENS, sizeof(STANDARD_SCREENS) / sizeof(settings_screen_t), 0, 0);
+}
 
-        state->num_settings = 7; // baseline, without LED settings
-#ifndef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
-        state->num_settings++;
-#endif
-#ifdef BUILD_GIT_HASH
-        state->num_settings++;
-#endif
-#ifdef WATCH_RED_TCC_CHANNEL
-        state->num_settings++;
-#endif
-#ifdef WATCH_GREEN_TCC_CHANNEL
-        state->num_settings++;
-#endif
-#ifdef WATCH_BLUE_TCC_CHANNEL
-        state->num_settings++;
-#endif
+void chime_settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
+    (void) watch_face_index;
+    setup_screens(context_ptr, CHIME_SCREENS, sizeof(CHIME_SCREENS) / sizeof(settings_screen_t), 0, 0);
+}
 
-        state->settings_screens = malloc(state->num_settings * sizeof(settings_screen_t));
-        state->settings_screens[current_setting].display = clock_setting_display;
-        state->settings_screens[current_setting].advance = clock_setting_advance;
-        current_setting++;
-        state->settings_screens[current_setting].display = beep_setting_display;
-        state->settings_screens[current_setting].advance = beep_setting_advance;
-        current_setting++;
-        state->settings_screens[current_setting].display = signal_setting_display;
-        state->settings_screens[current_setting].advance = signal_setting_advance;
-        current_setting++;
-        state->settings_screens[current_setting].display = annoy_setting_display;
-        state->settings_screens[current_setting].advance = annoy_setting_advance;
-        current_setting++;
-        state->settings_screens[current_setting].display = alarm_setting_display;
-        state->settings_screens[current_setting].advance = alarm_setting_advance;
-        current_setting++;
-        state->settings_screens[current_setting].display = timeout_setting_display;
-        state->settings_screens[current_setting].advance = timeout_setting_advance;
-        current_setting++;
-#ifndef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
-        state->settings_screens[current_setting].display = low_energy_setting_display;
-        state->settings_screens[current_setting].advance = low_energy_setting_advance;
-        current_setting++;
+void alarm_settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
+    (void) watch_face_index;
+    setup_screens(context_ptr, ALARM_SCREENS, sizeof(ALARM_SCREENS) / sizeof(settings_screen_t), 0, 0);
+}
+
+void led_settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
+    (void) watch_face_index;
+    uint8_t num_settings = sizeof(LED_SCREENS) / sizeof(settings_screen_t);
+#ifndef WATCH_RED_TCC_CHANNEL
+    (void)red_led_setting_display;
+    (void)red_led_setting_advance;
 #endif
-        state->settings_screens[current_setting].display = led_duration_setting_display;
-        state->settings_screens[current_setting].advance = led_duration_setting_advance;
-        current_setting++;
-        state->led_color_start = current_setting;
-#ifdef WATCH_RED_TCC_CHANNEL
-        state->settings_screens[current_setting].display = red_led_setting_display;
-        state->settings_screens[current_setting].advance = red_led_setting_advance;
-        current_setting++;
-#else
-        (void)red_led_setting_display;
-        (void)red_led_setting_advance;
+#ifndef WATCH_GREEN_TCC_CHANNEL
+    (void)green_led_setting_display;
+    (void)green_led_setting_advance;
 #endif
-#ifdef WATCH_GREEN_TCC_CHANNEL
-        state->settings_screens[current_setting].display = green_led_setting_display;
-        state->settings_screens[current_setting].advance = green_led_setting_advance;
-        current_setting++;
-#else
-        (void)green_led_setting_display;
-        (void)green_led_setting_advance;
+#ifndef WATCH_BLUE_TCC_CHANNEL
+    (void)blue_led_setting_display;
+    (void)blue_led_setting_advance;
 #endif
-#ifdef WATCH_BLUE_TCC_CHANNEL
-        state->settings_screens[current_setting].display = blue_led_setting_display;
-        state->settings_screens[current_setting].advance = blue_led_setting_advance;
-        current_setting++;
-#else
-        (void)blue_led_setting_display;
-        (void)blue_led_setting_advance;
-#endif
-    state->led_color_end = current_setting;
-#ifdef BUILD_GIT_HASH
-        state->settings_screens[current_setting].display = git_hash_setting_display;
-        state->settings_screens[current_setting].advance = git_hash_setting_advance;
-        current_setting++;
-#endif
-    }
+    setup_screens(context_ptr, LED_SCREENS, num_settings, LED_COLOR_START, num_settings);
 }
 
 void settings_face_activate(void *context) {

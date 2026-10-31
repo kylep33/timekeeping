@@ -864,6 +864,20 @@ void movement_set_annoy_enabled(bool value) {
     movement_state.annoy_enabled = value;
 }
 
+bool movement_mari_enabled(void) {
+    return movement_state.mari_enabled;
+}
+void movement_set_mari_enabled(bool value) {
+    movement_state.mari_enabled = value;
+}
+
+bool movement_alarms_muted(void) {
+    return movement_state.alarms_muted;
+}
+void movement_set_alarms_muted(bool value) {
+    movement_state.alarms_muted = value;
+}
+
 watch_buzzer_volume_t movement_alarm_volume(void) {
     return movement_state.alarm_volume;
 }

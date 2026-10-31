@@ -27,6 +27,10 @@
 /*
  * SETTINGS face (replaces old Preferences watch face)
  *
+ * Split into four faces that share this code: settings (clock, button beep,
+ * timeout, low energy, build), chime (signal volume, annoy, mari), alarm
+ * (alarm volume, mute) and LED.
+ *
  * The Settings watch face allows you to configure various options on your
  * Sensor Watch. Like all other screens, you advance the field you’re setting
  * with the Light button, and advance its value with the Alarm button. The
@@ -88,16 +92,43 @@ typedef struct {
     int8_t num_settings;
     int8_t led_color_start;
     int8_t led_color_end;
-    settings_screen_t *settings_screens;
+    const settings_screen_t *settings_screens;
 } settings_state_t;
 
 void settings_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void chime_settings_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void alarm_settings_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void led_settings_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void settings_face_activate(void *context);
 bool settings_face_loop(movement_event_t event, void *context);
 void settings_face_resign(void *context);
 
 #define settings_face ((const watch_face_t){ \
     settings_face_setup, \
+    settings_face_activate, \
+    settings_face_loop, \
+    settings_face_resign, \
+    NULL, \
+})
+
+#define chime_settings_face ((const watch_face_t){ \
+    chime_settings_face_setup, \
+    settings_face_activate, \
+    settings_face_loop, \
+    settings_face_resign, \
+    NULL, \
+})
+
+#define alarm_settings_face ((const watch_face_t){ \
+    alarm_settings_face_setup, \
+    settings_face_activate, \
+    settings_face_loop, \
+    settings_face_resign, \
+    NULL, \
+})
+
+#define led_settings_face ((const watch_face_t){ \
+    led_settings_face_setup, \
     settings_face_activate, \
     settings_face_loop, \
     settings_face_resign, \

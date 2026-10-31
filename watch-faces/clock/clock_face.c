@@ -44,6 +44,9 @@
 
 #define HOURLY_CHIME_INTERVAL_MIN 60
 #define ANNOY_CHIME_INTERVAL_MIN 15
+#define MINUTES_PER_HOUR 60
+#define MARI_FIRST_CHIME_MIN (9 * MINUTES_PER_HOUR)
+#define MARI_LAST_CHIME_MIN (22 * MINUTES_PER_HOUR)
 
 static void clock_indicate(watch_indicator_t indicator, bool on) {
     if (on) {
@@ -274,6 +277,13 @@ void clock_face_resign(void *context) {
     (void) context;
 }
 
+static bool clock_chime_allowed(watch_date_time_t date_time) {
+    if (!movement_mari_enabled()) return true;
+
+    uint16_t minute_of_day = date_time.unit.hour * MINUTES_PER_HOUR + date_time.unit.minute;
+    return minute_of_day >= MARI_FIRST_CHIME_MIN && minute_of_day <= MARI_LAST_CHIME_MIN;
+}
+
 movement_watch_face_advisory_t clock_face_advise(void *context) {
     movement_watch_face_advisory_t retval = { 0 };
     clock_state_t *state = (clock_state_t *) context;
@@ -281,7 +291,7 @@ movement_watch_face_advisory_t clock_face_advise(void *context) {
     if (state->time_signal_enabled) {
         watch_date_time_t date_time = movement_get_local_date_time();
         uint8_t chime_interval_min = movement_annoy_enabled() ? ANNOY_CHIME_INTERVAL_MIN : HOURLY_CHIME_INTERVAL_MIN;
-        retval.wants_background_task = date_time.unit.minute % chime_interval_min == 0;
+        retval.wants_background_task = date_time.unit.minute % chime_interval_min == 0 && clock_chime_allowed(date_time);
     }
 
     return retval;

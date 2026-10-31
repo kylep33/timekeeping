@@ -92,7 +92,8 @@ FACE_CLOCK, FACE_SUNRISE_SUNSET, FACE_MOON_PHASE
 6. setup_faces
 ================================================================================
 FACE_CLOCK, FACE_SET_TIME, FACE_ADVANCED_ALARM, FACE_FINETUNE, FACE_NANOSEC,
-FACE_SETTINGS, FACE_VOLTAGE
+FACE_SETTINGS, FACE_CHIME_SETTINGS, FACE_ALARM_SETTINGS, FACE_LED_SETTINGS,
+FACE_VOLTAGE
 
 this is configuration and settings etc.
 
@@ -102,38 +103,32 @@ this is configuration and settings etc.
         can set different alarms for different days like mon-fri, different
         times, different loudness and different tones.
 
-    FACE_FINETUNE - lines your seconds up with real time down to 25ms, and
-        figures out how fast or slow your watch drifts. do the FACE_NANOSEC
-        setup first (one time thing), then come back here every few weeks.
-        - pull up time.is on your phone and watch the seconds on both
-        - watch ahead? tap light = back 25ms. hold light = back 250ms
-        - watch behind? tap strt = ahead 25ms. hold strt = ahead 250ms
-        - keep going til the seconds flip at the exact same time. the big
-          number is how much youve moved it in ms
-        - tap mode to see hours since last finetune (DELtA). tap mode again
-          to see the drift fix (Frq). needs 6+ hours or it just says 6HR
-        - on Frq: hold light to apply the drift fix, or hold strt to skip
-          it. both save and kick you back to the clock
-        - very first time, skip it (hold strt on Frq). theres nothing to
-          compare to yet
-        - mode wont leave this face once youve moved the time. finish on Frq
+    FACE_FINETUNE - sync seconds to real time. do every few weeks.
+        - open time.is on your phone
+        - watch ahead: light (hold = bigger step). behind: strt
+        - stop when the seconds flip together
+        - tap mode twice to Frq. hold light = save. first time ever: hold
+          strt instead
 
-    FACE_NANOSEC - the drift fixer. nudges the clock a tiny bit every 10 min
-        and uses the temp sensor to fix drift from hot/cold too. end result
-        is way less drift, goal is under a minute a year.
-        one time setup:
-        - tap mode til you see PROFL. tap light/strt to pick P3, then hold
-          light to apply it. (P2 if P3 seems off)
-        - tap mode to leave. thats it, finetune fills in FCorr for you from
-          then on
-        - other pages (CTMP 2Coef 3Coef Cadnc AgeCo) are nerd knobs. leave
-          em alone
-        - tap light +1, tap strt -1, hold for +/- 50
-        - mode only leaves from the first page (FCorr), and saves on the way
-          out
+    FACE_NANOSEC - fixes drift. set up once, BEFORE finetune.
+        - tap mode to PROFL. light/strt to P3. hold light
+        - tap mode til it leaves. ignore the other pages
+
+    settings faces: light = next page, strt = change it. settings with a *
+    turn off on battery swap or reflash
+
+    FACE_SETTINGS - CLOCK 12h/24h, BTN beep, TMOUt, LoEne, Build
+
+    FACE_CHIME_SETTINGS
+        - SIGNAL: chime volume
+        - ANNOY*: chime every 15 min
+        - MARI*: chime only 9am-10pm
+
+    FACE_ALARM_SETTINGS
+        - ALARM: alarm volume
+        - MUTE*: no alarms ring. they stay set
+
+    FACE_LED_SETTINGS - how long the light stays on, red/green/blue
 
     FACE_VOLTAGE - shows your watch voltage. which should be in this range.
-        about 2.7V - 3.1V (fresh battery starts near the top and sits around
-        2.9V most of its life). 2.4V or lower means its getting close to
-        battery time change. the clock face also shows the two arrows icon
-        when it hits that, so you dont have to check here.
+        about 2.7V - 3.1V. the clock face also shows the two arrows icon when need change battery

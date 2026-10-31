@@ -341,8 +341,10 @@ typedef struct {
     watch_buzzer_volume_t signal_volume;
     watch_buzzer_volume_t alarm_volume;
 
-    // chime every quarter hour instead of every hour. not in settings.u32, that bitfield is full.
-    bool annoy_enabled;
+    // not in settings.u32, that bitfield is full
+    bool annoy_enabled;     // chime every quarter hour instead of every hour
+    bool mari_enabled;      // chime only during the day
+    bool alarms_muted;      // alarm face alarms stay set but don't ring
 } movement_state_t;
 
 void movement_move_to_face(uint8_t watch_face_index);
@@ -433,6 +435,12 @@ void movement_set_signal_volume(watch_buzzer_volume_t value);
 
 bool movement_annoy_enabled(void);
 void movement_set_annoy_enabled(bool value);
+
+bool movement_mari_enabled(void);
+void movement_set_mari_enabled(bool value);
+
+bool movement_alarms_muted(void);
+void movement_set_alarms_muted(bool value);
 
 watch_buzzer_volume_t movement_alarm_volume(void);
 void movement_set_alarm_volume(watch_buzzer_volume_t value);
